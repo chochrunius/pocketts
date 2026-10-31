@@ -31,6 +31,11 @@
     <string name="nickname">Nickname</string>
     <string name="server_address">Server address or nickname</string>
     <string name="server_password">Server password</string>
+    <string name="initial_channel_positioning">Initial channel positioning</string>
+    <string name="initial_channel_animated">Animated scroll</string>
+    <string name="initial_channel_instant">Instant jump</string>
+    <string name="remember_last_channel">Remember last channel</string>
+    <string name="default_channel_name">Default Channel name</string>
     <string name="remember_password">Remember the password</string>
     <string name="channel_password">Channel password</string>
     <string name="join">Join</string>

@@ -32,6 +32,7 @@ data class VoiceSettings(
     val uiSoundVolume: Float = 0.6f, // their volume, 0 - 1
     val adminTools: Boolean = false, // the person menu offers move, kick and ban (the server decides who may)
     val controlsAtBottom: Boolean = false, // the buttons and the Channels/Chat switch at the bottom of the screen (within thumb reach)
+    val animateInitialChannel: Boolean = true, // Advanced: initial channel positioning (opt out explicitly)
     val debugLog: Boolean = false, // the debug log for bug reports (Settings › Advanced), kept on the phone
 ) {
     enum class Activation { VAD, PTT, CONTINUOUS }
@@ -86,6 +87,7 @@ data class VoiceSettings(
                 uiSoundVolume = p.getFloat("uiSoundVolume", d.uiSoundVolume),
                 adminTools = p.getBoolean("adminTools", d.adminTools),
                 controlsAtBottom = p.getBoolean("controlsAtBottom", d.controlsAtBottom),
+                animateInitialChannel = p.getBoolean("animateInitialChannel", d.animateInitialChannel),
                 debugLog = p.getBoolean("debugLog", d.debugLog),
             )
         }
@@ -121,6 +123,7 @@ data class VoiceSettings(
             .putFloat("uiSoundVolume", uiSoundVolume)
             .putBoolean("adminTools", adminTools)
             .putBoolean("controlsAtBottom", controlsAtBottom)
+            .putBoolean("animateInitialChannel", animateInitialChannel)
             .putBoolean("debugLog", debugLog)
             .apply()
         secretPrefs(context).edit().putSecret("turnPassword", TURN_PASSWORD, turnPassword).apply()

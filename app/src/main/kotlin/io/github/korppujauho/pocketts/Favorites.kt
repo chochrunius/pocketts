@@ -15,6 +15,8 @@ data class Favorite(
     val password: String = "",
     val auto: Boolean = false,
     val filePort: Int? = null, // the server's file transfer port when it isn't the one the server tells (advanced)
+    val rememberChannel: Boolean = false,
+    val defaultChannel: String = "",
 ) {
     val label: String get() = name.ifBlank { address }
 }
@@ -40,6 +42,7 @@ object Favorites {
                 o.optString("address"), o.optString("name"), o.optString("nickname"),
                 if (inList) password(o.optString("password")) else passwords.optString(i), o.optBoolean("auto"),
                 o.optInt("filePort", 0).takeIf { it in 1..65535 },
+                o.optBoolean("rememberChannel"), o.optString("defaultChannel"),
             )
         }.filter { it.address.isNotBlank() }
         if (inList) save(c, list)
@@ -70,6 +73,7 @@ object Favorites {
         list.forEachIndexed { i, f ->
             a.put(
                 JSONObject().put("address", f.address.trim()).put("name", f.name.trim()).put("nickname", f.nickname.trim())
+                    .put("rememberChannel", f.rememberChannel).put("defaultChannel", f.defaultChannel)
                     .put("auto", i == autoAt).apply { f.filePort?.let { put("filePort", it) } }
             )
         }

@@ -51,7 +51,7 @@ import io.github.korppujauho.pocketts.R
 
 /** What the connect screen can ask for. */
 interface ConnectActions {
-    fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean)
+    fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean, rememberChannel: Boolean, defaultChannel: String)
     fun connectFavorite(f: Favorite)
     fun saveFavorite(old: Favorite?, new: Favorite)
     fun removeFavorite(f: Favorite)
@@ -78,6 +78,12 @@ fun ConnectScreen(
     var remember by remember { mutableStateOf(password.isNotEmpty()) }
     var favorite by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Favorite?>(null) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val channelPrefs = remember(addr) { io.github.korppujauho.pocketts.ChannelPreferences(context).load(addr) }
+    val matching = favorites.firstOrNull { io.github.korppujauho.pocketts.Favorites.same(it.address, addr) }
+    var rememberChannel by remember(addr, matching) { mutableStateOf(matching?.rememberChannel ?: channelPrefs.remember) }
+    var defaultChannel by remember(addr, matching) { mutableStateOf(matching?.defaultChannel ?: channelPrefs.defaultChannel) }
+    var advanced by remember { mutableStateOf(false) }
     val known = favorites.any { io.github.korppujauho.pocketts.Favorites.same(it.address, addr) }
 
     Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing).imePadding()) {
@@ -99,17 +105,20 @@ fun ConnectScreen(
                 Text(stringResource(R.string.connect_title), color = Ts.title, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
             }) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PrimaryButton(
+                        stringResource(R.string.connect), enabled = nick.isNotBlank() && addr.isNotBlank(), modifier = Modifier.fillMaxWidth(),
+                    ) { actions.connect(addr.trim(), nick.trim(), pw, remember, favorite && !known, rememberChannel, defaultChannel) }
                     TsField(nick, { nick = it }, stringResource(R.string.nickname))
                     TsField(addr, { addr = it }, stringResource(R.string.server_address), placeholder = "ts.example.com", keyboard = KeyboardType.Uri)
                     TsField(pw, { pw = it }, stringResource(R.string.server_password), password = true, imeAction = ImeAction.Go)
                     CheckRow(stringResource(R.string.remember_password), remember) { remember = it }
+                    CheckRow(stringResource(R.string.remember_last_channel), rememberChannel) { rememberChannel = it }
+                    TextButton(onClick = { advanced = !advanced }) { Text(stringResource(R.string.advanced)) }
+                    if (advanced) TsField(defaultChannel, { defaultChannel = it }, stringResource(R.string.default_channel_name))
                     // Always there; ticked (and fixed) for a server that already is a favourite
                     CheckRow(stringResource(if (known) R.string.favourites_in else R.string.favourites_save), favorite || known, enabled = !known) { favorite = it }
                     error?.let { WarningBanner(it, onDismissError, inset = 0.dp) }
                     UpdateCard()
-                    PrimaryButton(
-                        stringResource(R.string.connect), enabled = nick.isNotBlank() && addr.isNotBlank(), modifier = Modifier.fillMaxWidth(),
-                    ) { actions.connect(addr.trim(), nick.trim(), pw, remember, favorite && !known) }
                 }
             }
         }
@@ -169,9 +178,11 @@ fun FavoriteDialog(f: Favorite, onSave: (Favorite) -> Unit, onDelete: (() -> Uni
     var address by remember { mutableStateOf(f.address) }
     var nick by remember { mutableStateOf(f.nickname) }
     var pw by remember { mutableStateOf(f.password) }
+    var rememberChannel by remember { mutableStateOf(f.rememberChannel) }
+    var defaultChannel by remember { mutableStateOf(f.defaultChannel) }
     var auto by remember { mutableStateOf(f.auto) }
     var filePort by remember { mutableStateOf(f.filePort?.toString().orEmpty()) }
-    var advanced by remember { mutableStateOf(f.filePort != null) }
+    var advanced by remember { mutableStateOf(f.filePort != null || f.defaultChannel.isNotEmpty()) }
     TsDialog(
         onDismiss = onDismiss, title = stringResource(if (onDelete != null) R.string.favourite_edit else R.string.favourite_add),
         icon = androidx.compose.material.icons.Icons.Rounded.Star, tint = Ts.amber, subtitle = f.address.takeIf { onDelete != null },
@@ -181,7 +192,7 @@ fun FavoriteDialog(f: Favorite, onSave: (Favorite) -> Unit, onDelete: (() -> Uni
             Spacer(Modifier.weight(1f))
             PillButton(stringResource(R.string.cancel), onClick = onDismiss)
             PillButton(stringResource(R.string.save), PillKind.PRIMARY, enabled = address.isNotBlank()) {
-                onSave(Favorite(address.trim(), name.trim(), nick.trim(), pw, auto, filePort.toIntOrNull()?.takeIf { it in 1..65535 }))
+                onSave(f.copy(address = address.trim(), name = name.trim(), nickname = nick.trim(), password = pw, auto = auto, filePort = filePort.toIntOrNull()?.takeIf { it in 1..65535 }, rememberChannel = rememberChannel, defaultChannel = defaultChannel))
             }
         },
     ) {
@@ -190,6 +201,7 @@ fun FavoriteDialog(f: Favorite, onSave: (Favorite) -> Unit, onDelete: (() -> Uni
                 TsField(address, { address = it }, stringResource(R.string.server_address), keyboard = KeyboardType.Uri)
                 TsField(nick, { nick = it }, stringResource(R.string.favourite_nickname))
                 TsField(pw, { pw = it }, stringResource(R.string.server_password), password = true)
+                CheckRow(stringResource(R.string.remember_last_channel), rememberChannel) { rememberChannel = it }
                 CheckRow(stringResource(R.string.favourite_auto), auto) { auto = it }
                 // Advanced: folded away unless used
                 Row(
@@ -203,6 +215,7 @@ fun FavoriteDialog(f: Favorite, onSave: (Favorite) -> Unit, onDelete: (() -> Uni
                     )
                 }
                 if (advanced) {
+                    TsField(defaultChannel, { defaultChannel = it }, stringResource(R.string.default_channel_name))
                     TsField(
                         filePort, { v -> filePort = v.filter { it.isDigit() }.take(5) }, stringResource(R.string.favourite_file_port),
                         placeholder = stringResource(R.string.favourite_file_port_hint), keyboard = KeyboardType.Number,

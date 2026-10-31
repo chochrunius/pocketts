@@ -1,5 +1,20 @@
 package io.github.korppujauho.pocketts.ui
 
+import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.layout.positionInParent
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.layout.onGloballyPositioned
+import kotlinx.coroutines.flow.first
 import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.wrapContentSize
@@ -87,6 +102,21 @@ data class TreeContext(
     val canTalk: (ServerModel.Client) -> Boolean,
 )
 
+/** Kept by ServerScreen across tab switches; replaced only for a new connection. */
+class InitialChannelPosition(val appearedAt: Long = android.os.SystemClock.uptimeMillis(), pendingInitially: Boolean = true) {
+    var pending by mutableStateOf(pendingInitially)
+        private set
+    fun finish() { pending = false }
+    companion object {
+        val Saver = androidx.compose.runtime.saveable.Saver<InitialChannelPosition, List<Long>>(
+            save = { listOf(it.appearedAt, if (it.pending) 1L else 0L) },
+            restore = { InitialChannelPosition(it[0], it[1] == 1L) },
+        )
+    }
+}
+
+private data class OwnRow(val channel: Int, val client: Int, val y: Int, val height: Int)
+
 /** The channel tree as WebTS draws it: a box per channel with its people inside, sub-channels indented. */
 @Composable
 fun ChannelTree(
@@ -96,14 +126,66 @@ fun ChannelTree(
     onPerson: (ServerModel.Client) -> Unit,
     modifier: Modifier = Modifier,
     onLongChannel: ((ServerModel.Channel) -> Unit)? = null, // holding a channel (admin functions: edit mode)
+    listState: LazyListState = rememberLazyListState(),
+    initialPosition: InitialChannelPosition = remember { InitialChannelPosition() },
+    connected: Boolean = true,
+    animated: Boolean = true,
 ) {
+    val latestItems by rememberUpdatedState(items)
+    val latestContext by rememberUpdatedState(ctx)
+    val latestConnected by rememberUpdatedState(connected)
+    val latestAnimated by rememberUpdatedState(animated)
+    var ownRow by remember(initialPosition) { mutableStateOf<OwnRow?>(null) }
+    LaunchedEffect(initialPosition, listState) {
+        listState.interactionSource.interactions.collect {
+            if (it is DragInteraction.Start) initialPosition.finish()
+        }
+    }
+    // Never key this job by the tree: protocol updates used to cancel scrollToItem/bringIntoView
+    // mid-layout, and a sticky "row ready" flag could then refer to a detached lazy item.
+    LaunchedEffect(initialPosition, initialPosition.pending, listState) {
+        if (!initialPosition.pending) return@LaunchedEffect
+        snapshotFlow { latestConnected }.first { it }
+        val animate = latestAnimated
+        if (animate) delay((initialPosition.appearedAt + 2000 - android.os.SystemClock.uptimeMillis()).coerceAtLeast(0))
+        val index = snapshotFlow {
+            val context = latestContext
+            if (!latestConnected || context.ownId == 0 || context.ownChannel == 0 ||
+                listState.layoutInfo.totalItemsCount != latestItems.size) -1
+            else latestItems.indexOfFirst { it.node.channel.id == context.ownChannel && it.node.clients.any { c -> c.id == context.ownId } }
+        }.first { it >= 0 }
+        listState.scrollToItem(index)
+        val row = snapshotFlow { ownRow }.first {
+            it != null && it.channel == latestContext.ownChannel && it.client == latestContext.ownId
+        }!!
+        val viewport = (listState.layoutInfo.viewportEndOffset - listState.layoutInfo.viewportStartOffset).coerceAtLeast(1)
+        val offset = (row.y + row.height - viewport + listState.layoutInfo.afterContentPadding).coerceAtLeast(0)
+        if (animate) {
+            // Bounded traversal: compose only the destination and ~one preceding viewport,
+            // rather than decoding banners for every intermediate channel on a large server.
+            listState.scrollToItem(index, offset - viewport * 3 / 4)
+            val destination = snapshotFlow { listState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == row.channel } }.first { it != null }!!
+            val distance = destination.offset - listState.layoutInfo.beforeContentPadding + offset
+            if (distance != 0) listState.animateScrollBy(distance.toFloat(), tween(durationMillis = 1500))
+        }
+        // Resolve the ID again: channels can be inserted/reordered while the animation runs.
+        val finalIndex = latestItems.indexOfFirst { it.node.channel.id == latestContext.ownChannel }
+        if (finalIndex >= 0) {
+            val finalRow = ownRow?.takeIf { it.channel == latestContext.ownChannel && it.client == latestContext.ownId }
+            val finalOffset = finalRow?.let { (it.y + it.height - viewport + listState.layoutInfo.afterContentPadding).coerceAtLeast(0) } ?: offset
+            listState.scrollToItem(finalIndex, finalOffset)
+        }
+        initialPosition.finish()
+    }
     LazyColumn(
         modifier,
+        state = listState,
         contentPadding = PaddingValues(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(items, key = { it.node.channel.id }) { item ->
-            ChannelBox(item, ctx, onChannel, onPerson, onLongChannel)
+            ChannelBox(item, ctx, onChannel, onPerson, onLongChannel,
+                onOwnRow = if (initialPosition.pending) ({ ownRow = it }) else null)
         }
     }
 }
@@ -115,6 +197,7 @@ private fun ChannelBox(
     onChannel: (ServerModel.Channel) -> Unit,
     onPerson: (ServerModel.Client) -> Unit,
     onLongChannel: ((ServerModel.Channel) -> Unit)?,
+    onOwnRow: ((OwnRow) -> Unit)?,
 ) {
     val ch = item.node.channel
     val own = ch.id == ctx.ownChannel
@@ -136,7 +219,10 @@ private fun ChannelBox(
         },
     ) {
         ChannelTitle(ch, ctx.server, onLongClick = onLongChannel?.let { { it(ch) } }) { onChannel(ch) }
-        for (c in item.node.clients) PersonRow(c, ctx) { onPerson(c) }
+        for (c in item.node.clients) PersonRow(c, ctx,
+            modifier = if (c.id == ctx.ownId && onOwnRow != null) Modifier
+                .onGloballyPositioned { onOwnRow(OwnRow(ch.id, c.id, it.positionInParent().y.toInt(), it.size.height)) } else Modifier,
+        ) { onPerson(c) }
     }
 }
 
@@ -281,13 +367,13 @@ private fun androidx.compose.foundation.layout.RowScope.SpacerTitle(s: ServerMod
 }
 
 @Composable
-private fun PersonRow(c: ServerModel.Client, ctx: TreeContext, onClick: () -> Unit) {
+private fun PersonRow(c: ServerModel.Client, ctx: TreeContext, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val talking = c.id in ctx.talking
     val self = c.id == ctx.ownId
     val voice = if (c.id in ctx.whispering) Ts.whisper else Ts.talking
     val bg = if (talking) voice.copy(alpha = 0.1f) else Ts.row
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 1.dp).background(bg).clickable(onClick = onClick),
+        modifier.fillMaxWidth().padding(vertical = 1.dp).background(bg).clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(2.dp).height(34.dp).background(if (talking) voice else Color.Transparent))

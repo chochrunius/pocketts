@@ -324,14 +324,21 @@ private fun connect(
         it.address = address
     }
     MainActivity.current?.ensureMic()
-    Session.connect(context, address, nickname, password, filePort, channel, channelPassword, privilegeKey)
+    val link = JoinLink.parse(address)
+    Session.connect(context, link?.address ?: address, nickname, password, filePort,
+        channel.ifBlank { link?.channel.orEmpty() }, channelPassword.ifBlank { link?.channelPassword.orEmpty() }, privilegeKey)
 }
 
-private fun connectFavorite(context: Context, f: Favorite) =
+private fun connectFavorite(context: Context, f: Favorite) {
+    val store = ChannelPreferences(context)
+    store.save(f.address, store.load(f.address).copy(remember = f.rememberChannel, defaultChannel = f.defaultChannel))
     connect(context, f.address, f.nickname.ifBlank { Settings(context).nickname }, f.password, f.filePort)
+}
 
 private fun saveFavorites(context: Context, list: List<Favorite>) {
     Favorites.save(context, list)
+    val channels = ChannelPreferences(context)
+    list.forEach { f -> channels.save(f.address, channels.load(f.address).copy(remember = f.rememberChannel, defaultChannel = f.defaultChannel)) }
     favorites.value = Favorites.load(context)
 }
 
@@ -342,7 +349,9 @@ private fun Connect(state: Session.UiState, favs: List<Favorite>) {
     ConnectScreen(
         settings.nickname, settings.address, settings.serverPassword, favs, state.error,
         actions = object : ConnectActions {
-            override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean) {
+            override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean, rememberChannel: Boolean, defaultChannel: String) {
+                val store = ChannelPreferences(ctx)
+                store.save(address, store.load(address).copy(remember = rememberChannel, defaultChannel = defaultChannel))
                 // A teamspeak:// or tmspk.gg link pasted in: as when it's opened (an invite is looked up, then asked
                 // about). A ts3server:// one connects as before.
                 if (JoinLink.isLink(address) && !address.trim().startsWith("ts3server://", ignoreCase = true)) {
@@ -350,8 +359,11 @@ private fun Connect(state: Session.UiState, favs: List<Favorite>) {
                     openLinkText(ctx, address)
                     return
                 }
+                if (favs.any { Favorites.same(it.address, address) }) saveFavorites(ctx, favs.map {
+                    if (Favorites.same(it.address, address)) it.copy(rememberChannel = rememberChannel, defaultChannel = defaultChannel) else it
+                })
                 settings.serverPassword = if (remember) password else ""
-                if (favorite) saveFavorites(ctx, favs + Favorite(address, password = if (remember) password else ""))
+                if (favorite) saveFavorites(ctx, favs + Favorite(address, password = if (remember) password else "", rememberChannel = rememberChannel, defaultChannel = defaultChannel))
                 connect(ctx, address, nickname, password)
             }
             override fun connectFavorite(f: Favorite) = connectFavorite(ctx, f)

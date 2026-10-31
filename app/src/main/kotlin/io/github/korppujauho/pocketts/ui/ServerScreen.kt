@@ -175,6 +175,8 @@ fun ServerScreen(
     val editMode = editing && state.voice.adminTools && state.phase == Session.Phase.CONNECTED && view == View.CHANNELS
     androidx.activity.compose.BackHandler(editMode) { editing = false }
     val items = remember(state.tree) { flattenTree(state.tree) }
+    val initialChannelPosition = rememberSaveable(state.address, state.phase, saver = InitialChannelPosition.Saver) { InitialChannelPosition() }
+    val channelListState = androidx.compose.runtime.key(initialChannelPosition) { androidx.compose.foundation.lazy.rememberLazyListState() }
 
     // A private chat whose tab was closed: back to the channel
     if (chatKey is Chat.Key.Private && state.privateTabs.none { it.uid == (chatKey as Chat.Key.Private).uid }) chatKey = Chat.Key.Channel(0)
@@ -206,7 +208,8 @@ fun ServerScreen(
     var ringLight by rememberSaveable { mutableStateOf(false) }
     val frontCamera = state.stream.sharing == io.github.korppujauho.pocketts.proto.Streams.Kind.CAMERA && state.stream.shareFront && !state.stream.shareBoth
     val lightOn = ringLight && frontCamera
-    val window = (androidx.compose.ui.platform.LocalContext.current as? android.app.Activity)?.window
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val window = (context as? android.app.Activity)?.window
     DisposableEffect(lightOn, window) {
         window?.attributes = window?.attributes?.apply {
             screenBrightness = if (lightOn) 1f else android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
@@ -254,7 +257,9 @@ fun ServerScreen(
                                 },
                                 onClick = {
                                     serversMenu = false
-                                    addingFavorite = io.github.korppujauho.pocketts.Favorite(state.address, state.serverName, nickname)
+                                    val channels = io.github.korppujauho.pocketts.ChannelPreferences(context).load(state.address)
+                                    addingFavorite = io.github.korppujauho.pocketts.Favorite(state.address, state.serverName, nickname,
+                                        rememberChannel = channels.remember, defaultChannel = channels.defaultChannel)
                                 },
                             )
                         }                    }
@@ -357,8 +362,11 @@ fun ServerScreen(
                                 )
                             } else {
                                 ChannelTree(
-                                    items,
-                                    TreeContext(state.ownId, state.ownChannel, state.talking, state.serverKey, state.badges, actions::watch, whispering = state.whispering) { it.id !in state.cannotTalk },
+                                    items = items,
+                                    listState = channelListState, initialPosition = initialChannelPosition,
+                                    connected = state.phase == Session.Phase.CONNECTED,
+                                    animated = state.voice.animateInitialChannel,
+                                    ctx = TreeContext(state.ownId, state.ownChannel, state.talking, state.serverKey, state.badges, actions::watch, whispering = state.whispering) { it.id !in state.cannotTalk },
                                     onChannel = { ch ->
                                         if (ch.id == state.ownChannel) return@ChannelTree
                                         // A spacer is a channel too (some servers' AFK channel), but easily tapped by mistake: only when allowed

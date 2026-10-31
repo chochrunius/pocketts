@@ -374,7 +374,7 @@ object Example {
     }
 
     val noConnect = object : ConnectActions {
-        override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean) {}
+        override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean, rememberChannel: Boolean, defaultChannel: String) {}
         override fun connectFavorite(f: Favorite) {}
         override fun saveFavorite(old: Favorite?, new: Favorite) {}
         override fun removeFavorite(f: Favorite) {}

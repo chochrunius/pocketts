@@ -485,6 +485,10 @@ private fun Advanced(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
         Desc(stringResource(R.string.advanced_file_port))
     }
     // For bug reports: kept on the phone, without names or addresses (see AppLog); the app never sends it
+    Group(stringResource(R.string.initial_channel_positioning)) {
+        Radio(stringResource(R.string.initial_channel_animated), v.animateInitialChannel) { onChange(v.copy(animateInitialChannel = true)) }
+        Radio(stringResource(R.string.initial_channel_instant), !v.animateInitialChannel) { onChange(v.copy(animateInitialChannel = false)) }
+    }
     Group(stringResource(R.string.debug_log_title)) {
         Check(stringResource(R.string.debug_log), v.debugLog) { onChange(v.copy(debugLog = it)) }
         Desc(stringResource(R.string.debug_log_desc))

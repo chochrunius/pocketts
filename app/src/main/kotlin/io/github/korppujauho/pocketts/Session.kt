@@ -268,6 +268,8 @@ object Session : TsClient.Listener {
         val channel: String = "", val channelPassword: String = "", val privilegeKey: String = "",
     )
     private var target: Target? = null
+    private var channelFallback = false
+    private var attemptedChannel = ""
     private var retries = 0
     private var oldWaits = 0 // tries refused because the server still had our old connection
     @Volatile private var wasConnected = false // only a connection that worked is tried again
@@ -281,6 +283,7 @@ object Session : TsClient.Listener {
     ) {
         app = context.applicationContext
         if (_state.value.phase != Phase.IDLE) return
+        channelFallback = false
         retries = 0
         oldWaits = 0
         wasConnected = false
@@ -297,7 +300,7 @@ object Session : TsClient.Listener {
         val t = levelTarget ?: return
         levelTarget = null
         _state.update { it.copy(neededLevel = 0) }
-        connect(app, t.address, t.nickname, t.password, t.filePort)
+        connect(app, t.address, t.nickname, t.password, t.filePort, t.channel, t.channelPassword, t.privilegeKey)
     }
 
     /** The security level wasn't raised (enough): the server's need is let be, and said why we're not connected. */
@@ -343,13 +346,15 @@ object Session : TsClient.Listener {
                 restoreHistory(address)
             }
             startAudio()
+            attemptedChannel = if (channelFallback) "" else ChannelPreferences(app).load(address).channel(t.channel, reconnecting = wasConnected)
             client = TsClient(this) { AppLog.log(it) }.also {
                 files = FileTransfer(it, portOverride = filePort)
                 it.connect(
                     TsClient.Options(
                         host = target.host, port = target.port, identity = identity,
                         nickname = nickname.ifBlank { "PocketTS user" }, serverPassword = serverPassword,
-                        defaultChannel = t.channel, defaultChannelPassword = t.channelPassword,
+                        defaultChannel = attemptedChannel, defaultChannelPassword = if (attemptedChannel == t.channel) t.channelPassword else
+                            attemptedChannel.removePrefix("/").toIntOrNull()?.let { ChannelPasswords(app).get(address, it) }.orEmpty(),
                     )
                 )
             }
@@ -842,6 +847,7 @@ object Session : TsClient.Listener {
         oldWaits = 0
         if (s.waitingForOld) _state.update { it.copy(waitingForOld = false) }
         wasConnected = true
+        channelFallback = false
         if (s.reconnecting > 0) _state.update { it.copy(reconnecting = 0) }
         if (s.away) client?.sendCommand(Commands.build("clientupdate", "client_away" to true, "client_away_message" to s.awayMessage))
         if (s.inputMuted || s.outputMuted) {
@@ -1233,6 +1239,16 @@ object Session : TsClient.Listener {
     override fun onDisconnected(reason: String?) {
         // Why, as the kind of end; the words can be someone's (a kick reason)
         AppLog.log("Disconnected (${client?.end ?: "left"})" + (reason?.let { ": ${LogPrivacy.message(it)}" } ?: ""))
+        if (!channelFallback && attemptedChannel.isNotEmpty() && client?.refusal in setOf("768", "769", "770", WRONG_CHANNEL_PASSWORD, NO_PERMISSION) && target != null) {
+            channelFallback = true
+            files?.onDisconnected()
+            files = null
+            engine?.reset()
+            stopAudio()
+            client = null
+            start(keepChat = wasConnected)
+            return
+        }
         val text = endText(client, reason)
         // The server still has our old connection, which it drops only after a while (the same identity may be on
         // once): tried again every few seconds until it lets go, for up to two minutes
@@ -1418,6 +1434,10 @@ object Session : TsClient.Listener {
     private fun publish(phase: Phase) {
         val tree = model.tree()
         val me = model.ownClient
+        if (phase == Phase.CONNECTED && me != null && me.channel > 0) {
+            // The protocol's /cid form survives renames, duplicate names and slashes in channel names.
+            ChannelPreferences(app).joined(_state.value.address, "/${me.channel}")
+        }
         ownCodec = model.ownChannel?.codec?.takeIf { it == 4 || it == 5 } ?: 4
         _state.update {
             it.copy(
