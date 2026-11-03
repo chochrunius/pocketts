@@ -501,7 +501,7 @@ private fun Advanced(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
                         android.widget.Toast.makeText(context, R.string.debug_log_empty, android.widget.Toast.LENGTH_SHORT).show()
                     } else {
                         val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
-                            .putExtra(android.content.Intent.EXTRA_STREAM, uri).putExtra(android.content.Intent.EXTRA_SUBJECT, "PocketTS debug log")
+                            .putExtra(android.content.Intent.EXTRA_STREAM, uri).putExtra(android.content.Intent.EXTRA_SUBJECT, "AlfredTS debug log")
                             .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         context.startActivity(android.content.Intent.createChooser(send, null))
                     }

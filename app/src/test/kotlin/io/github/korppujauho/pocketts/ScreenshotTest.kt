@@ -278,8 +278,8 @@ class ScreenshotTest {
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconTile(RoundedCornerShape(24), Color(0xFF1B1D22), R.drawable.ic_launcher_foreground)
-            IconTile(CircleShape, Color(0xFF1B1D22), R.drawable.ic_launcher_foreground)
+            IconTile(RoundedCornerShape(24), Color(0xFF052414), R.drawable.ic_launcher_foreground)
+            IconTile(CircleShape, Color(0xFF052414), R.drawable.ic_launcher_foreground)
             IconTile(CircleShape, Color(0xFFD7E3FF), R.drawable.ic_launcher_monochrome, tint = Color(0xFF1B3A7A))
             Image(painterResource(R.drawable.ic_notification), null, Modifier.size(32.dp), colorFilter = ColorFilter.tint(Color.White))
         }

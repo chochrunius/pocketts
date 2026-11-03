@@ -24,8 +24,8 @@ android {
         versionName = "1.5.0"
         // Phones (WebRTC's native code is large; these two cover practically every phone)
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
-        // The name under the app's icon (test builds say so, apart from the real one; the app itself still says PocketTS)
-        manifestPlaceholders["appLabel"] = "PocketTS"
+        // The name under the app's icon; debug builds are labelled separately.
+        manifestPlaceholders["appLabel"] = "AlfredTS"
     }
 
     // The release key: its file and passwords come from scripts/dev.sh release (asked each time), never from git
@@ -56,7 +56,7 @@ android {
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            manifestPlaceholders["appLabel"] = "PocketTStest"
+            manifestPlaceholders["appLabel"] = "AlfredTS Debug"
             buildConfigField("String", "DEV_LOG_URL", "\"${devEnv["DEV_LOG_URL"].orEmpty()}\"")
             buildConfigField("boolean", "UPDATE_CHECK", "false")
         }
@@ -83,7 +83,7 @@ android {
             initWith(getByName("release"))
             applicationIdSuffix = ".shrunk"
             versionNameSuffix = "-shrunk"
-            manifestPlaceholders["appLabel"] = "PocketTSshrunk"
+            manifestPlaceholders["appLabel"] = "AlfredTS"
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
             buildConfigField("String", "DEV_LOG_URL", "\"${devEnv["DEV_LOG_URL"].orEmpty()}\"")
@@ -91,7 +91,7 @@ android {
         }
     }
 
-    // The app's languages, listed for Android 13 and later (Settings › Apps › PocketTS › Language), from res/values-*
+    // The app's languages, listed for Android 13 and later (Settings › Apps › AlfredTS › Language), from res/values-*
     androidResources {
         generateLocaleConfig = true
     }

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -80,11 +79,11 @@ fun AppHeader(right: @Composable () -> Unit = {}) {
         Modifier.fillMaxWidth().height(44.dp).background(Ts.header).padding(start = 16.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // The app icon's drawing (its middle part: the 108 dp canvas has room around it for launchers' shapes)
+        // Separate unpadded artwork keeps the sheep readable in the existing 24 dp logo slot.
         Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
             androidx.compose.foundation.Image(
-                androidx.compose.ui.res.painterResource(io.github.korppujauho.pocketts.R.drawable.ic_launcher_foreground),
-                contentDescription = null, modifier = Modifier.requiredSize(58.dp),
+                androidx.compose.ui.res.painterResource(io.github.korppujauho.pocketts.R.drawable.alfredts_header),
+                contentDescription = null, modifier = Modifier.size(24.dp),
             )
         }
         Spacer(Modifier.width(8.dp))

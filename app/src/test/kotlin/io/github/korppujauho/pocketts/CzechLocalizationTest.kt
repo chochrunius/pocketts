@@ -21,7 +21,7 @@ class CzechLocalizationTest {
         assertEquals("Nastavení", context.getString(R.string.settings))
         assertEquals("Zapamatovat poslední kanál", context.getString(R.string.remember_last_channel))
         assertEquals("Okamžitý přesun", context.getString(R.string.initial_channel_instant))
-        assertEquals("PocketTS", context.getString(R.string.app_name))
+        assertEquals("AlfredTS", context.getString(R.string.app_name))
         assertEquals("Opus Voice", context.getString(R.string.channel_codec_voice))
     }
 

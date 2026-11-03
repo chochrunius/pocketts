@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The app icon's background: the app's dark grey -->
+<!-- Full bleed, without a baked-in border: the launcher supplies the outer mask. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#FF1B1D22" />
+    <gradient android:type="radial" android:centerX="0.5" android:centerY="0.65"
+        android:gradientRadius="72dp" android:startColor="#FF286B26" android:endColor="#FF052414" />
 </shape>

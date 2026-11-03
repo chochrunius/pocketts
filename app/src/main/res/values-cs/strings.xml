@@ -45,7 +45,7 @@
     <string name="favourite_file_port">Port pro přenos souborů</string>
     <string name="favourite_file_port_hint">Port serveru (obvykle 30033)</string>
     <string name="favourite_file_port_desc">Pouze pokud se nenačítají obrázky a avatary serveru: přenos souborů na serveru používá jiný port.</string>
-    <string name="update_title">Vyšla verze PocketTS %1$s</string>
+    <string name="update_title">Vyšla verze AlfredTS %1$s</string>
     <string name="update_text">Na GitHub je dostupná novější verze než tato (%1$s).</string>
     <string name="not_now">Teď ne</string>
     <string name="download">Stáhnout</string>
@@ -174,9 +174,9 @@
     <string name="avatar_change">Změnit</string>
     <string name="avatar_desc">Ostatní ho uvidí na tomto serveru. Velikost se přizpůsobí na 320 × 320.</string>
     <string name="general_floating_ptt">Plovoucí tlačítko pro mluvení</string>
-    <string name="general_floating_ptt_desc">V režimu mluvení po stisku zůstává dole na obrazovce PocketTS kulaté tlačítko, takže můžete mluvit i při procházení chatu. Tlačítko nad ostatními aplikacemi má samostatné nastavení níže.</string>
+    <string name="general_floating_ptt_desc">V režimu mluvení po stisku zůstává dole na obrazovce AlfredTS kulaté tlačítko, takže můžete mluvit i při procházení chatu. Tlačítko nad ostatními aplikacemi má samostatné nastavení níže.</string>
     <string name="general_overlay_ptt">Tlačítko pro mluvení nad ostatními aplikacemi</string>
-    <string name="general_overlay_ptt_desc">V režimu mluvení po stisku se po přepnutí do jiné aplikace zobrazí kulaté tlačítko (v samotném PocketTS se nezobrazuje). Podržením mluvíte, přetažením ho přesunete. Android si jednou vyžádá povolení zobrazovat PocketTS nad ostatními aplikacemi.</string>
+    <string name="general_overlay_ptt_desc">V režimu mluvení po stisku se po přepnutí do jiné aplikace zobrazí kulaté tlačítko (v samotném AlfredTS se nezobrazuje). Podržením mluvíte, přetažením ho přesunete. Android si jednou vyžádá povolení zobrazovat AlfredTS nad ostatními aplikacemi.</string>
     <string name="general_volume_ptt">Mluvení tlačítky hlasitosti</string>
     <string name="general_volume_ptt_desc">V režimu mluvení po stisku můžete při zobrazené aplikaci mluvit podržením tlačítka hlasitosti (místo změny hlasitosti).</string>
     <string name="general_headset_ptt">Mluvení tlačítkem na sluchátkách</string>
@@ -184,7 +184,7 @@
     <string name="general_call_mute">Ztlumit během telefonních hovorů</string>
     <string name="general_call_mute_desc">Při vyzvánění nebo zahájení telefonního hovoru se vypne mikrofon i zvuk (včetně zvuku sledovaného přenosu). Po skončení hovoru se znovu zapnou. Sdílený přenos se pozastaví, aby diváci hovor neviděli. Co jste ztlumili ručně, zůstane ztlumené.</string>
     <string name="general_updates">Kontrolovat aktualizace</string>
-    <string name="general_updates_desc">PocketTS se jednou denně dotáže na GitHub, zda vyšla nová verze, a upozorní na ni na připojovací obrazovce. Žádné údaje o vás se neodesílají.</string>
+    <string name="general_updates_desc">AlfredTS se jednou denně dotáže na GitHub, zda vyšla nová verze, a upozorní na ni na připojovací obrazovce. Žádné údaje o vás se neodesílají.</string>
     <string name="general_screen_on">Ponechat obrazovku zapnutou</string>
     <string name="general_screen_on_desc">Obrazovka nezhasne, dokud jste připojeni a aplikace je otevřená. Při sdílení nebo sledování přenosu zůstává zapnutá vždy.</string>
     <string name="general_spacers">Povolit vstup do oddělovacích kanálů</string>
@@ -261,7 +261,7 @@
     <string name="identity_export_subtitle">Uchovejte ji v soukromí</string>
     <string name="identity_save_file">Uložit do souboru</string>
     <string name="identity_export_what">Soubor obsahuje vaši identitu: kdokoli ho má, může na všech serverech vystupovat jako vy, se všemi vašimi skupinami a oprávněními, například právy správce serveru. Nikdo vás od sebe nerozezná.</string>
-    <string name="identity_export_where">Uložte ho na místo, kam máte přístup jen vy, například do tohoto telefonu nebo na soukromý disk. Neposílejte ho v chatu ani e-mailem a nezveřejňujte ho. Otevře ho aplikace TeamSpeak i PocketTS na jiném telefonu.</string>
+    <string name="identity_export_where">Uložte ho na místo, kam máte přístup jen vy, například do tohoto telefonu nebo na soukromý disk. Neposílejte ho v chatu ani e-mailem a nezveřejňujte ho. Otevře ho aplikace TeamSpeak i AlfredTS na jiném telefonu.</string>
     <string name="identity_wipe_title">Smazat vaši identitu?</string>
     <string name="identity_wipe_what">Identita tohoto telefonu se smaže a při příštím připojení se vytvoří nová. Pro každý server pak budete někdo nový: vaše skupiny, oprávnění ani další práva přiřazená původní identitě (například práva správce) se nepřenesou.</string>
     <string name="identity_wipe_back">Obnovit ji lze pouze z exportované kopie. Pokud ji budete chtít znovu použít, zvolte Zrušit a nejprve ji exportujte.</string>
