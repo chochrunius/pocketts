@@ -1,6 +1,6 @@
 # Translations
 
-PocketTS speaks English, Finnish, German, Spanish, French, Simplified Chinese and Russian. It follows the phone's
+PocketTS speaks English, Finnish, German, Spanish, French, Simplified Chinese, Russian and Czech. It follows the phone's
 language, or the one chosen in PocketTS's Settings › UI › Language. On Android 13 and later, that choice is the same
 as the phone's own per-app setting: Settings › Apps › PocketTS › Language.
 
@@ -13,10 +13,14 @@ as the phone's own per-app setting: Settings › Apps › PocketTS › Language.
 | French | `values-fr/strings.xml` | not yet |
 | Simplified Chinese | `values-b+zh+Hans/strings.xml` | not yet |
 | Russian | `values-ru/strings.xml` | not yet |
+| Czech | `values-cs/strings.xml` | not yet (AI-generated; full native-speaker review pending) |
 
 The translations were written with AI help, like the rest of PocketTS. If you speak one of these languages and
 something reads oddly, please open an [issue](https://github.com/KorppuJauho/pocketts/issues) or a pull request that
 changes the file. Small fixes are welcome.
+
+The Czech translation is an initial AI-generated version and has not yet undergone complete native-speaker review.
+It uses `cs` resources for Czech locales, including `cs-CZ`. Native-speaker corrections are welcome.
 
 ## Words
 
@@ -44,7 +48,8 @@ PocketTS's sentences are its own; only the terms were taken over.
 
 - Keep the placeholders: `%1$s` is a name or text, `%1$d` a number. Their order in the sentence can change.
 - Plurals (`<plurals>`) have one form per number category of the language (Finnish: one, other; Russian: one, few,
-  many, other; Chinese: other only).
+  many, other; Czech: one, few, many, other; Chinese: other only).
+- Czech `many` covers decimal quantities; the app currently requests integer counts (`one`, `few`, `other`).
 - In Android's files, an apostrophe is written `\'` and a double quote `\"`. French uses the typographic `’`, which
   needs no escaping.
 - "PocketTS", "TeamSpeak", "GitHub", "Opus Voice" and "Opus Music" stay as they are.
