@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Whether a newer PocketTS is out on GitHub, for the version installed from there (Google Play updates apps by
+ * Whether a newer AlfredTS is out on GitHub, for the version installed from there (Google Play updates apps by
  * itself). At most once a day it asks GitHub for the latest release; nothing about the person is sent. The answer
  * shows as a card on the connect screen until it's dismissed or that version is installed. Off in
  * Settings > General > Check for updates.
@@ -14,8 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 object UpdateCheck {
     data class Release(val version: String, val url: String)
 
-    private const val LATEST = "https://api.github.com/repos/KorppuJauho/pocketts/releases/latest"
-    private const val RELEASES = "https://github.com/KorppuJauho/pocketts/releases"
+    internal const val LATEST = "https://api.github.com/repos/chochrunius/pocketts/releases/latest"
+    internal const val RELEASES = "https://github.com/chochrunius/pocketts/releases"
     private const val DAY_MS = 24 * 3600 * 1000L
 
     private val _available = MutableStateFlow<Release?>(null)
@@ -36,7 +36,7 @@ object UpdateCheck {
                 c.connectTimeout = 10_000
                 c.readTimeout = 10_000
                 c.setRequestProperty("Accept", "application/vnd.github+json")
-                c.setRequestProperty("User-Agent", "PocketTS")
+                c.setRequestProperty("User-Agent", "AlfredTS")
                 val body = try {
                     if (c.responseCode != 200) null else c.inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
                 } finally {
@@ -44,7 +44,7 @@ object UpdateCheck {
                 }
                 val release = body?.let { Json.parse(it) as? Map<*, *> } ?: return@Thread
                 val version = (release["tag_name"] as? String)?.removePrefix("v")?.trim()?.ifEmpty { null } ?: return@Thread
-                val url = (release["html_url"] as? String)?.takeIf { it.startsWith("https://github.com/") } ?: RELEASES
+                val url = releaseUrl(release["html_url"] as? String)
                 prefs.edit().putLong("checked", System.currentTimeMillis()).putString("version", version).putString("url", url).apply()
                 AppLog.log("Update check: latest is $version")
                 offer(prefs, version, url)
@@ -53,6 +53,9 @@ object UpdateCheck {
             }
         }, "update-check").apply { isDaemon = true }.start()
     }
+
+    internal fun releaseUrl(url: String?): String =
+        url?.takeIf { it.startsWith("$RELEASES/tag/") } ?: RELEASES
 
     /** "Not now": this version isn't offered again (a later one is). */
     fun dismiss(context: Context) {

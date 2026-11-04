@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+## 1.6.0 (2026-11-04) — AlfredTS
+
+First official AlfredTS release from `chochrunius/pocketts`, based on PocketTS.
+See [the release notes](docs/releases/1.6.0.md) for installation and migration details.
+
+- **Czech localization:** Czech text, plurals and language selection.
+- **Channel preferences:** per-server/favourite default channel and optional last-channel memory.
+- **Initial channel scrolling:** ID-based positioning, bounded animation, manual-scroll cancellation
+  and an option to disable the initial animation.
+- **Connection errors:** displayed below the application header.
+- **AlfredTS branding:** name, header artwork, launcher and notification icons and translated app references.
+- **Independent release:** application ID `io.github.chochrunius.alfredts`, versionCode 7,
+  updates from this fork, signed APK verification by certificate SHA-256, checksums and build provenance.
+  This installs separately from applications using the old ID; private data is not migrated automatically.
+
+Included upstream changes since PocketTS 1.5.0:
+
 - **Debug log:** Settings › Advanced › Debug log keeps a log for bug reports on the phone, crashes included, with
   server addresses, names, messages and keys taken out (running numbers such as "server 1" tell them apart). Of the
   chat it notes only that a message was sent or arrived. The app never sends it: Share log hands it to

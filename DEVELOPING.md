@@ -66,72 +66,134 @@ freezes, sound, route) and a picture every few seconds (also in `dist/viewer/`).
 page's `/clock` on the phone and share the screen: the viewer reads the clock from the stream and logs the delay from
 the phone's screen to its own.
 
-## Releasing
+## Releasing AlfredTS
 
-A release is a signed APK attached to a GitHub release, built by GitHub Actions from the tagged commit
-(`.github/workflows/release.yml`). Test builds are a separate app (their ID ends in `.debug`), so both can be on one
-phone.
+AlfredTS releases belong to `chochrunius/pocketts`. The release workflow builds only
+an APK, verifies its signing certificate and manifest, adds a SHA-256 checksum and
+GitHub build attestation, and creates a **draft**. It never uploads to Google Play.
+The inherited Play build type and helper are upstream tooling, not this release path.
 
-### A release
+### Application identity
 
-1. In `app/build.gradle.kts`, raise `versionCode` by one and set `versionName` (for example `1.1.0`).
-2. Move the changelog's "Unreleased" lines under a new heading `## <version> (<date>)`.
-3. Merge that to `main`, then tag the merged commit and push the tag:
-   ```bash
-   git tag v1.1.0 origin/main
-   git push origin v1.1.0
+The release application ID is `io.github.chochrunius.alfredts`; debug and shrunk builds
+append `.debug` and `.shrunk`. The Kotlin namespace remains
+`io.github.korppujauho.pocketts`, preserving resource imports and native JNI names.
+The FileProvider authority follows the application ID. No Firebase, OAuth redirect,
+app-link verification or other application-ID-bound service is configured in the app.
+The upstream Play helper still targets the upstream package and must not be used for AlfredTS.
+
+The new ID installs separately from PocketTS and older AlfredTS builds with the old
+ID. Private data and the TeamSpeak identity are not imported; server groups and
+permissions tied to the old identity do not carry over. Leave the old installation
+intact. Runtime permissions and overlay access must be granted again. TeamSpeak URI
+handlers can coexist and Android may show a chooser. See [1.6.0 notes](docs/releases/1.6.0.md).
+
+### Signing prerequisites (once, before any tag)
+
+Select the intended long-term production key and back up the key and passwords
+outside Git. Never replace an existing release key: future updates require the same
+signing identity. No key is generated as part of release preparation or the workflow.
+If no production key exists, obtaining explicit approval to create one is a separate
+step; do not run the inherited `scripts/dev.sh keystore` command without that approval.
+Existing alias names and certificate subject names do not need to say AlfredTS.
+
+In GitHub Settings > Environments, create `release`, restrict deployment tags to `v*`,
+and configure any required reviewer. Configure these **environment secrets**:
+
+- `POCKETTS_KEYSTORE_BASE64`: the chosen keystore, base64 encoded.
+- `POCKETTS_KEYSTORE_PASSWORD`: its store password.
+- `POCKETTS_KEY_PASSWORD`: only if the private key password differs from the store password.
+
+Configure the certificate fingerprint as a **repository Actions variable** (an
+environment variable also works; avoid a conflicting environment override).
+The optional alias can be a repository or environment variable:
+
+- `ALFREDTS_SIGNING_CERT_SHA256`: the trusted signing certificate's SHA-256 fingerprint,
+  64 hexadecimal characters or colon-separated hexadecimal pairs. Obtain it directly
+  from the selected key's certificate (`keytool -list -v -keystore <outside-repo-path> -alias <alias>`,
+  interactive password prompt), cross-check it independently and preserve it for future releases.
+  Do not take it from the newly built APK and blindly trust that value.
+- `POCKETTS_KEY_ALIAS`: the selected alias; defaults to `pocketts` for compatibility.
+
+Keep the existing `POCKETTS_*` infrastructure names; they do not identify the Android app.
+Never print credentials, pass passwords on command lines or store a keystore in Git.
+For example, after environment setup, stream a key from WSL straight to GitHub in PowerShell
+(the path here is a placeholder, not a request to create a key):
+
+```powershell
+wsl -d Ubuntu-24.04 -- bash -lc 'base64 -w0 /path/outside/repository/release.keystore' | gh secret set POCKETTS_KEYSTORE_BASE64 --env release --repo chochrunius/pocketts
+gh secret set POCKETTS_KEYSTORE_PASSWORD --env release --repo chochrunius/pocketts
+# Only for a different key password (interactive input):
+gh secret set POCKETTS_KEY_PASSWORD --env release --repo chochrunius/pocketts
+# Non-secret public certificate fingerprint and alias; replace placeholders:
+gh variable set ALFREDTS_SIGNING_CERT_SHA256 --body '<trusted-certificate-sha256>' --repo chochrunius/pocketts
+gh variable set POCKETTS_KEY_ALIAS --body '<selected-alias>' --env release --repo chochrunius/pocketts
+```
+
+### Prepare, draft, then publish
+
+1. Update `versionName` and increase `versionCode` in `app/build.gradle.kts`.
+   Keep `CHANGELOG.md` and `docs/releases/<version>.md` accurate; the latter is the
+   release body. For the first AlfredTS release these are `1.6.0` and `7`.
+2. Run `bash scripts/dev.sh gradle :app:testDebugUnitTest :tsproto:test :app:assembleRelease`
+   in WSL. Without a key this checks the shrunk release build but produces an **unsigned**
+   APK; it is not a publishable artifact. Avoid repeating the build without a reason.
+3. Review the diff, then explicitly authorize commit, push and merge of the preparation
+   branch. Select only release-preparation files; leave unrelated artwork untracked.
+4. Confirm signing prerequisites above and that the reviewed commit is on remote `main`.
+   Only when tagging and draft creation are authorized, run in PowerShell:
+
+   ```powershell
+   git fetch --no-tags origin main
+   git log -1 origin/main
+   git tag -a v1.6.0 origin/main -m "AlfredTS 1.6.0"
+   git -c push.followTags=false push origin refs/tags/v1.6.0:refs/tags/v1.6.0
+   gh run list --workflow release.yml --repo chochrunius/pocketts --limit 3
+   gh run watch <run-id> --exit-status --repo chochrunius/pocketts
+   gh release view v1.6.0 --repo chochrunius/pocketts
    ```
-4. The workflow checks that the tag matches `versionName`, runs the tests, builds and signs the APK and the Google
-   Play bundle, checks their signatures, records build attestations and makes a **draft** release with the APK, its
-   SHA-256 and the changelog lines. The Play bundle stays with the run (Artifacts).
-5. Download the APK from the draft, install it on a phone and try the basics: connect, talk, chat, a picture, a
-   stream. If the release crashes where a test build doesn't, shrinking removed something: `scripts/dev.sh apk-shrunk`
-   makes the same shrunk app with the test key, sending its log to the test page like a test build, so the error
-   shows (a crash in native code leaves no line: then look for a class the native code needs, see
-   `app/proguard-rules.pro`).
-6. Publish the draft.
-7. Google Play: the workflow uploads the bundle to the closed test as a draft (once set up); send it for review in
-   Play Console. See [docs/play/README.md](docs/play/README.md).
 
-Anyone can check that a release APK was built by this repository's workflow:
+   The tag push triggers the workflow. It verifies the version, runs tests, signs and
+   checks the APK against the trusted certificate fingerprint, checks its package,
+   version and non-debuggable manifest, creates checksums and an attestation, and
+   creates the draft **AlfredTS 1.6.0** with `AlfredTS-1.6.0.apk` and
+   `AlfredTS-1.6.0.apk.sha256`. Do not separately create a second release.
+5. Download the draft assets to an empty review directory:
 
-```bash
-gh attestation verify PocketTS-1.1.0.apk --repo KorppuJauho/pocketts
-```
+   ```powershell
+   gh release download v1.6.0 --repo chochrunius/pocketts --dir <empty-review-directory>
+   gh attestation verify <empty-review-directory>/AlfredTS-1.6.0.apk --repo chochrunius/pocketts
+   Get-FileHash <empty-review-directory>/AlfredTS-1.6.0.apk -Algorithm SHA256
+   Get-Content <empty-review-directory>/AlfredTS-1.6.0.apk.sha256
+   ```
 
-The GitHub version checks `releases/latest` once a day, so a published release reaches users who have update checks
-on. Drafts and pre-releases aren't offered.
+   Compare hashes. Run `scripts/verify-release.sh` inside the build image against the
+   downloaded APK using the independently trusted certificate fingerprint. Install
+   that exact signed APK on a phone, verify coexistence with the old package, Czech,
+   channel preferences and scrolling, failed connection UI, connect/voice/chat/pictures/
+   streams, and launch after force-stop. See [docs/TESTING.md](docs/TESTING.md).
+   A test-key build cannot replace this check. Confirm an update signed with the same
+   key preserves data when a subsequent release candidate is available.
+6. Only after phone verification and explicit publication authorization:
 
-### The release key
+   ```powershell
+   gh release edit v1.6.0 --draft=false --latest --repo chochrunius/pocketts
+   ```
 
-The workflow signs with the key in the `release` environment's secrets (Settings › Environments › release), which
-only `v*` tags can use:
+   Published stable releases become visible to enabled in-app update checks (at most
+   once daily); drafts and prereleases are not offered.
 
-- `POCKETTS_KEYSTORE_BASE64`: the key file as base64
-- `POCKETTS_KEYSTORE_PASSWORD`: its password (the key's password is the same)
+### Local signed build (fallback)
 
-The key was made once with `scripts/dev.sh keystore`, and the file is kept outside the repo.
-
-**Back up the key file and its password somewhere safe.** Every update has to be signed with the same key: without
-it, people can't update to a new version and would have to uninstall first, which loses their settings.
-
-To put the key into the secrets (from Windows, with the key in WSL; it goes straight to GitHub, not through the
-screen or the clipboard):
-
-```bash
-wsl -e bash -c "base64 -w0 ~/.pocketts/release.keystore" | gh secret set POCKETTS_KEYSTORE_BASE64 --env release --repo KorppuJauho/pocketts
-gh secret set POCKETTS_KEYSTORE_PASSWORD --env release --repo KorppuJauho/pocketts
-```
-
-### Building a release on this machine
-
-`scripts/dev.sh release` still builds the same signed APK locally (for example if GitHub Actions is unavailable).
-
-### Making the release key (once)
+Set `POCKETTS_KEYSTORE` in ignored `dev.env` to an existing key outside the repository
+(default `~/.pocketts/release.keystore` inside WSL). Export the trusted
+`ALFREDTS_SIGNING_CERT_SHA256` and, if necessary, `POCKETTS_KEY_ALIAS` and
+`POCKETTS_KEY_PASSWORD` securely in the shell environment. Then run:
 
 ```bash
-scripts/dev.sh keystore
+bash scripts/dev.sh release
 ```
 
-This asks for a password and makes the key at `~/.pocketts/release.keystore` (inside WSL on Windows; set
-`POCKETTS_KEYSTORE` in `dev.env` to keep it somewhere else). It never goes into the repo.
+It prompts for the store password, builds and verifies the APK and writes
+`dist/AlfredTS-<version>.apk` plus `.apk.sha256`. This local APK has **no GitHub build
+attestation**. Prefer the tagged workflow artifact for the official release.

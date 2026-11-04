@@ -17,11 +17,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "io.github.korppujauho.pocketts"
+        applicationId = "io.github.chochrunius.alfredts"
         minSdk = 29
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.5.0"
+        versionCode = 7
+        versionName = "1.6.0"
         // Phones (WebRTC's native code is large; these two cover practically every phone)
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
         // The name under the app's icon; debug builds are labelled separately.

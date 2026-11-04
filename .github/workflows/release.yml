@@ -1,9 +1,6 @@
-# The release: pushing a tag v<version> (the same as versionName in app/build.gradle.kts) builds the signed APK from
-# that commit, records where it was built (a build attestation anyone can check), and makes a draft release with the
-# APK attached. The Google Play version (an app bundle) is built too and kept with the run.
-# The bundle goes to the closed test on Google Play as a draft (scripts/play-upload.sh, once its service account is
-# set up). Publishing the GitHub draft and sending the Play draft for review stay a person's steps. See DEVELOPING.md.
-name: Release
+# Tagging v<version> builds a signed AlfredTS APK and creates a draft only.
+# No Google Play build or upload. See DEVELOPING.md for signing prerequisites.
+name: AlfredTS Release
 
 on:
   push:
@@ -16,96 +13,98 @@ permissions:
 
 jobs:
   release:
+    if: github.repository == 'chochrunius/pocketts'
     runs-on: ubuntu-24.04
     # The release key is in this environment's secrets, which only v* tags can use
     environment: release
+    env:
+      ALFREDTS_SIGNING_CERT_SHA256: ${{ vars.ALFREDTS_SIGNING_CERT_SHA256 }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: Check the version
+      - name: Check the version and signing configuration
+        env:
+          KEYSTORE_BASE64: ${{ secrets.POCKETTS_KEYSTORE_BASE64 }}
+          POCKETTS_KEYSTORE_PASSWORD: ${{ secrets.POCKETTS_KEYSTORE_PASSWORD }}
         run: |
+          set -euo pipefail
           VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | head -1)
           if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
             echo "::error::The tag is $GITHUB_REF_NAME but versionName is $VERSION"
             exit 1
           fi
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts | head -1)
+          [[ "$CODE" =~ ^[1-9][0-9]*$ ]]
+          test -s "docs/releases/$VERSION.md"
+          [[ -n "$KEYSTORE_BASE64" && -n "$POCKETTS_KEYSTORE_PASSWORD" ]] || { echo '::error::Release signing secrets are missing'; exit 1; }
+          [[ "$ALFREDTS_SIGNING_CERT_SHA256" =~ ^([0-9a-fA-F]{64}|([0-9a-fA-F]{2}:){31}[0-9a-fA-F]{2})$ ]] || { echo '::error::Trusted signing certificate SHA-256 is missing or invalid'; exit 1; }
+          echo "CODE=$CODE" >> "$GITHUB_ENV"
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       # The same build environment as scripts/dev.sh uses
       - name: Build image
         run: docker build -f docker/build.Dockerfile -t pocketts-build --build-arg ACCEPT_ANDROID_SDK_LICENSE=yes docker
 
-      - name: Build the signed APK and the Play bundle
+      - name: Test and build the signed APK
         env:
           KEYSTORE_BASE64: ${{ secrets.POCKETTS_KEYSTORE_BASE64 }}
           POCKETTS_KEYSTORE_PASSWORD: ${{ secrets.POCKETTS_KEYSTORE_PASSWORD }}
+          POCKETTS_KEY_ALIAS: ${{ vars.POCKETTS_KEY_ALIAS || 'pocketts' }}
+          POCKETTS_KEY_PASSWORD: ${{ secrets.POCKETTS_KEY_PASSWORD || secrets.POCKETTS_KEYSTORE_PASSWORD }}
         run: |
-          mkdir -p "$RUNNER_TEMP/keys" out
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/keys" out dist
           trap 'rm -rf "$RUNNER_TEMP/keys"' EXIT
           printf '%s' "$KEYSTORE_BASE64" | tr -d '\r\n ' | base64 -d > "$RUNNER_TEMP/keys/release.keystore"
           docker run --rm \
             -v "$PWD":/work -v "$PWD/out":/out -v "$RUNNER_TEMP/keys":/keys:ro \
             -e POCKETTS_BUILD_ROOT=/out \
             -e POCKETTS_KEYSTORE_FILE=/keys/release.keystore -e POCKETTS_KEYSTORE_PASSWORD \
-            pocketts-build ./gradlew --no-daemon --console=plain :app:testDebugUnitTest :tsproto:test :app:assembleRelease :app:bundlePlay
-          mkdir dist play
-          cp out/app/outputs/apk/release/app-release.apk "dist/PocketTS-$VERSION.apk"
-          cp out/app/outputs/bundle/play/app-play.aab "play/PocketTS-$VERSION-play.aab"
+            -e POCKETTS_KEY_ALIAS -e POCKETTS_KEY_PASSWORD \
+            pocketts-build ./gradlew --no-daemon --console=plain :app:testDebugUnitTest :tsproto:test :app:assembleRelease
+          cp out/app/outputs/apk/release/app-release.apk "dist/AlfredTS-$VERSION.apk"
 
-      - name: Check the signature
+      - name: Verify release signature and manifest
         run: |
-          APKSIGNER=$(docker run --rm pocketts-build bash -c 'ls /opt/android-sdk/build-tools/*/apksigner | head -1')
-          CERTS=$(docker run --rm -v "$PWD/dist":/dist pocketts-build "$APKSIGNER" verify --print-certs "/dist/PocketTS-$VERSION.apk")
-          grep -q "CN=PocketTS" <<< "$CERTS" || { echo "::error::The APK isn't signed with the release key"; exit 1; }
-          BUNDLE=$(docker run --rm -v "$PWD/play":/play pocketts-build keytool -printcert -jarfile "/play/PocketTS-$VERSION-play.aab")
-          grep -q "CN=PocketTS" <<< "$BUNDLE" || { echo "::error::The Play bundle isn't signed with the release key"; exit 1; }
+          docker run --rm -v "$PWD":/work:ro -e ALFREDTS_SIGNING_CERT_SHA256 \
+            pocketts-build bash scripts/verify-release.sh "dist/AlfredTS-$VERSION.apk" "$VERSION" "$CODE"
+
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum "AlfredTS-$VERSION.apk" > "AlfredTS-$VERSION.apk.sha256"
+          sha256sum -c "AlfredTS-$VERSION.apk.sha256"
 
       - uses: actions/attest-build-provenance@v4
         with:
-          subject-path: |
-            dist/PocketTS-${{ env.VERSION }}.apk
-            play/PocketTS-${{ env.VERSION }}-play.aab
+          subject-path: dist/AlfredTS-${{ env.VERSION }}.apk
 
-      # For uploading to Google Play by hand (Actions › this run › Artifacts)
       - uses: actions/upload-artifact@v7
         with:
-          name: PocketTS-${{ env.VERSION }}-play
-          path: play/PocketTS-${{ env.VERSION }}-play.aab
+          name: AlfredTS-${{ env.VERSION }}
+          path: dist/AlfredTS-*
           retention-days: 90
           if-no-files-found: error
-
-      # To the closed test on Google Play, as a draft: "Send for review" in Play Console stays a person's step.
-      # Skipped (with a note) until the service account's key is in this environment's secrets.
-      - name: Upload to Google Play
-        env:
-          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          PLAY_TRACK: alpha
-          PLAY_RELEASE_STATUS: draft
-        run: |
-          # Play's release notes: this version's headlines from the changelog (at most 500 characters)
-          TITLES=$(awk -v v="## $VERSION" 'index($0, v) == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md \
-            | sed -n 's/^- \*\*\([^*]*\)\*\*.*/\1/p' | sed 's/:$//' | grep -v '^For developers' | paste -sd ',' - | sed 's/,/, /g')
-          NOTES="New in $VERSION: ${TITLES:-fixes and improvements}. All changes: https://github.com/$GITHUB_REPOSITORY/releases/tag/$GITHUB_REF_NAME"
-          scripts/play-upload.sh "play/PocketTS-$VERSION-play.aab" "${NOTES:0:500}"
 
       - name: Draft release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          APK="dist/PocketTS-$VERSION.apk"
-          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
-          # This version's lines from the changelog
-          CHANGES=$(awk -v v="## $VERSION" 'index($0, v) == 1 {on = 1; next} /^## / {on = 0} on' CHANGELOG.md)
+          set -euo pipefail
+          cp "docs/releases/$VERSION.md" "$RUNNER_TEMP/notes.md"
+          SHA=$(cut -d' ' -f1 "dist/AlfredTS-$VERSION.apk.sha256")
           {
-            echo "$CHANGES"
             echo
-            echo "## Install"
-            echo
-            echo "Download **PocketTS-$VERSION.apk** below and open it on the phone (Android 10 or newer)."
+            echo "## Verification"
             echo
             echo "SHA-256: \`$SHA\`"
             echo
-            echo "This APK was built by GitHub Actions from the tagged commit. To check that, with the GitHub CLI:"
-            echo "\`gh attestation verify PocketTS-$VERSION.apk --repo $GITHUB_REPOSITORY\`"
-          } > notes.md
-          gh release create "$GITHUB_REF_NAME" "$APK" --draft --verify-tag --title "PocketTS $VERSION" --notes-file notes.md
+            echo "\`sha256sum -c AlfredTS-$VERSION.apk.sha256\`"
+            echo
+            echo "Built by this repository's GitHub Actions from the tagged commit:"
+            echo "\`gh attestation verify AlfredTS-$VERSION.apk --repo chochrunius/pocketts\`"
+          } >> "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" "dist/AlfredTS-$VERSION.apk" "dist/AlfredTS-$VERSION.apk.sha256" \
+            --repo chochrunius/pocketts --draft --verify-tag --title "AlfredTS $VERSION" --notes-file "$RUNNER_TEMP/notes.md"

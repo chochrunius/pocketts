@@ -1,7 +1,10 @@
-# PocketTS
+# AlfredTS
 
-> **Made with AI assistance.** PocketTS is written with the help of an AI coding assistant. Every change is tested
-> by hand on a real phone before it goes in.
+An independently maintained fork of [PocketTS](https://github.com/KorppuJauho/pocketts).
+Official AlfredTS releases are published by [chochrunius/pocketts](https://github.com/chochrunius/pocketts).
+
+> **Made with AI assistance.** This project uses AI coding assistance. Automated checks and phone verification
+> are reported separately; a successful build alone does not establish phone compatibility.
 
 A free, unofficial TeamSpeak client for Android, made for TeamSpeak 6 servers. Type a nickname and a server address
 to join.
@@ -23,7 +26,7 @@ to join.
 - **Connecting** by address, server nickname, TeamSpeak link or invite; favourites; privilege keys from a server's
   admin; reconnecting by itself when the network changes; and mute, sound and disconnect buttons in the notification.
 - **Settings** and sounds for events.
-- **Languages:** English, Finnish, German, Spanish, French, Simplified Chinese and Russian (see
+- **Languages:** Czech, English, Finnish, German, Spanish, French, Simplified Chinese and Russian (see
   [TRANSLATIONS.md](TRANSLATIONS.md); corrections welcome).
 
 Your TeamSpeak identity and saved passwords are encrypted on the phone. No account, no ads, no tracking (see the
@@ -31,15 +34,18 @@ Your TeamSpeak identity and saved passwords are encrypted on the phone. No accou
 that off in Settings).
 
 **Status:** early, being tested. See the [changelog](CHANGELOG.md), and the
-[issues](https://github.com/KorppuJauho/pocketts/issues) for what's planned. Questions, ideas and tips are welcome in
-the [discussions](https://github.com/KorppuJauho/pocketts/discussions); bugs go to the issues, where a debug log
+[issues](https://github.com/chochrunius/pocketts/issues) for this fork. Report bugs in the issues, where a debug log
 (Settings › Advanced › Debug log, with names and addresses taken out) helps with bugs that are hard to repeat.
 Security problems: please report them privately, see [SECURITY.md](SECURITY.md).
 
 ## Install
 
-Download the APK from [Releases](https://github.com/KorppuJauho/pocketts/releases) and open it on your phone
+Download the APK from [AlfredTS Releases](https://github.com/chochrunius/pocketts/releases) and open it on your phone
 (Android 10 or newer). Android asks once to allow installing apps from your browser.
+
+AlfredTS 1.6.0 uses `io.github.chochrunius.alfredts` and installs separately from PocketTS and earlier builds using
+the old application ID. Their identity, settings and history are not automatically imported. Keep the old app's
+data; see [the 1.6.0 release notes](docs/releases/1.6.0.md) before switching.
 
 ## Known limitations
 
@@ -61,9 +67,9 @@ The people who have helped are in [CREDITS.md](CREDITS.md).
 [GNU General Public License v3.0](LICENSE). You're welcome to fork PocketTS, change it and share your version, as
 long as you share its source code under the same license.
 
-The PocketTS name and icon are mine. If you release your own version as an app (in an app store or as your own
-downloads), give it a different name and icon so nobody mistakes it for PocketTS.
+The original PocketTS name and icon belong to the upstream author. This fork uses the AlfredTS name and artwork
+to distinguish its releases from upstream PocketTS.
 
 PocketTS isn't affiliated with or endorsed by TeamSpeak Systems GmbH. TeamSpeak is their trademark.
 
-PocketTS is free and stays free. If you'd like to say thanks, you can [buy me a coffee](https://buymeacoffee.com/jauho).
+To support the original PocketTS author, see the upstream [coffee page](https://buymeacoffee.com/jauho).

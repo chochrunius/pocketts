@@ -141,18 +141,22 @@ case "${1:-}" in
     echo "Made $KEYSTORE. Back it up somewhere safe (with its password): updates need it."
     ;;
   release)
-    [ -f "$KEYSTORE" ] || { echo "No release key at $KEYSTORE: make one with scripts/dev.sh keystore"; exit 1; }
+    [ -f "$KEYSTORE" ] || { echo "No release key configured. See DEVELOPING.md before creating or selecting a key."; exit 1; }
+    : "${ALFREDTS_SIGNING_CERT_SHA256:?Set the trusted release certificate SHA-256 (see DEVELOPING.md)}"
     read -r -s -p "Release key password: " KEYPASS; echo
     # The password goes to the build only, through the environment (not on the command line, not into files)
     export POCKETTS_KEYSTORE_PASSWORD="$KEYPASS"
-    EXTRA=(-v "$(dirname "$KEYSTORE")":/keys:ro -e POCKETTS_KEYSTORE_FILE="/keys/$(basename "$KEYSTORE")" -e POCKETTS_KEYSTORE_PASSWORD)
+    EXTRA=(-v "$(dirname "$KEYSTORE")":/keys:ro -e POCKETTS_KEYSTORE_FILE="/keys/$(basename "$KEYSTORE")" -e POCKETTS_KEYSTORE_PASSWORD -e POCKETTS_KEY_ALIAS -e POCKETTS_KEY_PASSWORD)
     gradle :app:assembleRelease
     unset POCKETTS_KEYSTORE_PASSWORD KEYPASS
     VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' "$ROOT/app/build.gradle.kts" | head -1)
+    CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' "$ROOT/app/build.gradle.kts" | head -1)
+    docker run --rm -v "$ROOT":/work:ro -v pocketts-out:/out:ro -e ALFREDTS_SIGNING_CERT_SHA256 "$IMAGE" \
+      bash scripts/verify-release.sh /out/app/outputs/apk/release/app-release.apk "$VERSION" "$CODE"
     mkdir -p "$ROOT/dist"
     docker run --rm -v pocketts-out:/out -v "$ROOT/dist":/dist "$IMAGE" bash -c \
-      "cp /out/app/outputs/apk/release/app-release.apk /dist/PocketTS-$VERSION.apk && cd /dist && sha256sum PocketTS-$VERSION.apk"
-    echo "dist/PocketTS-$VERSION.apk is ready to attach to the GitHub release."
+      "cp /out/app/outputs/apk/release/app-release.apk /dist/AlfredTS-$VERSION.apk && cd /dist && sha256sum AlfredTS-$VERSION.apk > AlfredTS-$VERSION.apk.sha256 && sha256sum -c AlfredTS-$VERSION.apk.sha256"
+    echo "dist/AlfredTS-$VERSION.apk is signed and verified. A local build has no GitHub build attestation."
     ;;
   play-key)
     # Google Play signs the app with our own release key, so the Play and GitHub versions are the same app.
