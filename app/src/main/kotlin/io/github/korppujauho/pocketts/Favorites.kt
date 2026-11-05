@@ -24,6 +24,28 @@ data class Favorite(
 object Favorites {
     private fun prefs(c: Context) = c.getSharedPreferences("favorites", Context.MODE_PRIVATE)
 
+    /** Append without decrypting/re-encrypting passwords or normalizing existing entries.
+     * Passwords are indexed by position; an absent trailing password already reads as empty.
+     * Invalid storage is left intact and initialization can retry after it is repaired.
+     */
+    internal fun initializeDefault(c: Context): Boolean = try {
+        val p = prefs(c)
+        val list = JSONArray(p.getString("list", "[]"))
+        val entries = (0 until list.length()).map { list.getJSONObject(it) }
+        require(entries.all { it.opt("address") is String && it.getString("address").isNotBlank() })
+        if (entries.any { same(it.getString("address"), Settings.DEFAULT_ADDRESS) }) true
+        else {
+            list.put(JSONObject().put("address", Settings.DEFAULT_ADDRESS).put("name", "Ludmila Chochrun.eu")
+                .put("nickname", "").put("auto", false).put("rememberChannel", true).put("defaultChannel", "")
+                // Keep the legacy loader's password mode when any old entry contains a password.
+                .apply { if (entries.any { it.has("password") }) put("password", "") })
+            p.edit().putString("list", list.toString()).commit()
+        }
+    } catch (_: Exception) {
+        AppLog.log("Default favourite initialization deferred: existing favourites could not be read")
+        false
+    }
+
     private const val PASSWORD = "favorites/password" // one in the list, as an earlier version kept it
     private const val PASSWORDS = "favorites/passwords"
 

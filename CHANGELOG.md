@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.6.1 (2026-11-05)
+
+- **Default server:** one-time initialization adds Ludmila Chochrun.eu (`chochrun.eu`)
+  to favourites without automatic connection. Fresh installs start with nickname
+  `AlfredTS_VaseJmeno` and last-channel memory enabled for this server.
+- **Safe upgrades:** existing favourites, custom connection fields, channel preferences,
+  passwords and TeamSpeak identity are preserved. Deleted defaults are not recreated.
+- **Release verification:** accept Android Build Tools V2/V3 signer certificate output
+  while requiring every reported signer SHA-256 to match the trusted certificate.
+
 ## 1.6.0 (2026-11-04) — AlfredTS
 
 First official AlfredTS release from `chochrunius/pocketts`, based on PocketTS.

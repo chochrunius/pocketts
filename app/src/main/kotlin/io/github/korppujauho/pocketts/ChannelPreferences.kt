@@ -25,6 +25,10 @@ class ChannelPreferences(context: Context) {
         prefs.edit().putString(key(address), JSONObject().put("remember", value.remember)
             .put("default", value.defaultChannel).put("last", value.lastChannel).toString()).apply()
     }
+
+    internal fun initializeDefault(address: String): Boolean =
+        prefs.contains(key(address)) || prefs.edit().putString(key(address),
+            JSONObject().put("remember", true).put("default", "").put("last", "").toString()).commit()
     fun joined(address: String, path: String) {
         val old = load(address)
         if (old.remember && path.isNotEmpty() && old.lastChannel != path) save(address, old.copy(lastChannel = path))

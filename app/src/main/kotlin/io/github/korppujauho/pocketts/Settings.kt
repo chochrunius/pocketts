@@ -8,6 +8,18 @@ class Settings(private val context: Context) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     private val secrets = secretPrefs(context)
 
+    /** One-time defaults before the first screen or auto-connect reads settings. No secrets are accessed. */
+    fun initializeDefaults() {
+        if (prefs.getBoolean("defaults161", false)) return
+        if (!Favorites.initializeDefault(context)) return
+        if (!ChannelPreferences(context).initializeDefault(DEFAULT_ADDRESS)) return
+        prefs.edit().apply {
+            if (nickname.isBlank()) putString("nickname", "AlfredTS_VaseJmeno")
+            if (address.isBlank()) putString("address", DEFAULT_ADDRESS)
+            putBoolean("defaults161", true)
+        }.commit()
+    }
+
     var nickname: String
         get() = prefs.getString("nickname", "").orEmpty()
         set(v) = prefs.edit().putString("nickname", v).apply()
@@ -92,7 +104,8 @@ class Settings(private val context: Context) {
 
     class IdentityUnreadable(message: String) : Exception(message)
 
-    private companion object {
-        const val IDENTITY = "settings/identity"
+    companion object {
+        internal const val DEFAULT_ADDRESS = "chochrun.eu"
+        private const val IDENTITY = "settings/identity"
     }
 }

@@ -159,6 +159,7 @@ class MainActivity : ComponentActivity() {
             askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         current = this
+        Settings(this).initializeDefaults()
         favorites.value = Favorites.load(this)
         Session.load(this)
         // A TeamSpeak link that opened the app: asked first, and no favourite connects by itself meanwhile
