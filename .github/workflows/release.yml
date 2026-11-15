@@ -5,6 +5,17 @@ name: AlfredTS Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to recover
+        required: true
+        type: choice
+        options: [v1.7.0]
+
+concurrency:
+  group: alfredts-release-${{ inputs.release_tag || github.ref_name }}
+  cancel-in-progress: false
 
 permissions:
   contents: write      # the draft release
@@ -13,24 +24,55 @@ permissions:
 
 jobs:
   release:
-    if: github.repository == 'chochrunius/pocketts'
+    if: github.repository == 'chochrunius/pocketts' && (github.event_name == 'push' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
-    # The release key is in this environment's secrets, which only v* tags can use
+    # Environment policy must allow the triggering ref. Recovery from main requires a branch rule.
     environment: release
     env:
       ALFREDTS_SIGNING_CERT_SHA256: ${{ vars.ALFREDTS_SIGNING_CERT_SHA256 }}
     steps:
+      - name: Verify release ref and check for conflicts
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          ref="refs/tags/$RELEASE_TAG"
+          expected="$GITHUB_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            [[ "$RELEASE_TAG" == v1.7.0 ]]
+            expected=51852397547d6d9064e03f46db7c1e5659fc3fa2
+          fi
+          refs=$(git ls-remote "https://github.com/$GITHUB_REPOSITORY.git" "$ref" "$ref^{}")
+          sha=$(awk -v ref="$ref" '$2 == ref { tag = $1 } $2 == ref "^{}" { commit = $1 } END { print (commit ? commit : tag) }' <<< "$refs")
+          [[ -n "$sha" && "$sha" == "$expected" ]] || { echo '::error::Release tag missing or commit mismatch'; exit 1; }
+          releases=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq '.[].tag_name')
+          if grep -Fxq "$RELEASE_TAG" <<< "$releases"; then
+            echo '::error::A draft or published release already exists for this tag'
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v7
+        with:
+          # Resolve the tag first, then pin checkout so a later change cannot alter the build source.
+          ref: ${{ steps.source.outputs.sha }}
+          persist-credentials: false
 
       - name: Check the version and signing configuration
         env:
+          EXPECTED_SHA: ${{ steps.source.outputs.sha }}
           KEYSTORE_BASE64: ${{ secrets.POCKETTS_KEYSTORE_BASE64 }}
           POCKETTS_KEYSTORE_PASSWORD: ${{ secrets.POCKETTS_KEYSTORE_PASSWORD }}
         run: |
           set -euo pipefail
+          [[ $(git rev-parse HEAD) == "$EXPECTED_SHA" ]]
           VERSION=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts | head -1)
-          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::The tag is $GITHUB_REF_NAME but versionName is $VERSION"
+          if [ "v$VERSION" != "$RELEASE_TAG" ]; then
+            echo "::error::The tag is $RELEASE_TAG but versionName is $VERSION"
             exit 1
           fi
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
@@ -81,6 +123,15 @@ jobs:
         with:
           subject-path: dist/AlfredTS-${{ env.VERSION }}.apk
 
+      - name: Attest the checked-out source of a recovered release
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: dist/AlfredTS-${{ env.VERSION }}.apk
+          predicate-type: https://github.com/chochrunius/pocketts/attestations/release-source/v1
+          predicate: >-
+            {"repository":"${{ github.repository }}","ref":"refs/tags/${{ env.RELEASE_TAG }}","commit":"${{ steps.source.outputs.sha }}"}
+
       - uses: actions/upload-artifact@v7
         with:
           name: AlfredTS-${{ env.VERSION }}
@@ -103,8 +154,13 @@ jobs:
             echo
             echo "\`sha256sum -c AlfredTS-$VERSION.apk.sha256\`"
             echo
-            echo "Built by this repository's GitHub Actions from the tagged commit:"
+            echo "Built by this repository's GitHub Actions from commit \`$(git rev-parse HEAD)\` (\`$RELEASE_TAG\`):"
             echo "\`gh attestation verify AlfredTS-$VERSION.apk --repo chochrunius/pocketts\`"
+            if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+              echo
+              echo 'The workflow ran from main and checked out the release source above. Verify the source attestation:'
+              echo "\`gh attestation verify AlfredTS-$VERSION.apk --repo chochrunius/pocketts --predicate-type https://github.com/chochrunius/pocketts/attestations/release-source/v1 --format json\`"
+            fi
           } >> "$RUNNER_TEMP/notes.md"
-          gh release create "$GITHUB_REF_NAME" "dist/AlfredTS-$VERSION.apk" "dist/AlfredTS-$VERSION.apk.sha256" \
+          gh release create "$RELEASE_TAG" "dist/AlfredTS-$VERSION.apk" "dist/AlfredTS-$VERSION.apk.sha256" \
             --repo chochrunius/pocketts --draft --verify-tag --title "AlfredTS $VERSION" --notes-file "$RUNNER_TEMP/notes.md"
