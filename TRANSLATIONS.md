@@ -15,7 +15,8 @@ as the phone's own per-app setting: Settings › Apps › PocketTS › Language.
 | Russian | `values-ru/strings.xml` | not yet |
 | Czech | `values-cs/strings.xml` | not yet (AI-generated; full native-speaker review pending) |
 
-The translations were written with AI help, like the rest of PocketTS. If you speak one of these languages and
+The translations were written with AI help, like the rest of PocketTS. The Czech one was first made by
+[chochrunius](https://github.com/chochrunius) in their fork. If you speak one of these languages and
 something reads oddly, please open an [issue](https://github.com/KorppuJauho/pocketts/issues) or a pull request that
 changes the file. Small fixes are welcome.
 
@@ -42,7 +43,8 @@ made by their contributors and published under the MIT license:
 > TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
 
-PocketTS's sentences are its own; only the terms were taken over.
+PocketTS's sentences are its own; only the terms were taken over. The Czech file's terms haven't been compared with
+them yet.
 
 ## For translators
 

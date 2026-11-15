@@ -48,7 +48,6 @@ object Session : TsClient.Listener {
         val tree: List<ServerModel.Node> = emptyList(),
         val ownId: Int = 0,
         val ownChannel: Int = 0,
-        val talking: Set<Int> = emptySet(),
         val cannotTalk: Set<Int> = emptySet(), // people without the talk power for their channel
         val inputMuted: Boolean = false,
         val outputMuted: Boolean = false,
@@ -65,7 +64,6 @@ object Session : TsClient.Listener {
         val pttHeld: Boolean = false,
         val whisperTo: WhisperList = WhisperList(),
         val whisperHeld: Boolean = false,
-        val whispering: Set<Int> = emptySet(), // people whispering to us (and we, while we whisper)
         val badges: Map<Int, List<Long>> = emptyMap(), // per person: their group and own icons
         val serverIcon: Long = 0,
         val sendingPicture: Boolean = false,
@@ -115,6 +113,16 @@ object Session : TsClient.Listener {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
 
+    /**
+     * Who is talking, and of them who is whispering (to us; and we, while we whisper). Kept apart from [UiState]: in a
+     * busy channel it changes several times a second, and only the talking indicators need it, so a change redraws
+     * those, not the whole screen.
+     */
+    data class Voices(val talking: Set<Int> = emptySet(), val whispering: Set<Int> = emptySet())
+
+    private val _voices = MutableStateFlow(Voices())
+    val voices: StateFlow<Voices> = _voices
+
     private lateinit var app: Context
     private val worker = Executors.newSingleThreadExecutor { r -> Thread(r, "session").apply { isDaemon = true } }
     private var client: TsClient? = null
@@ -152,6 +160,10 @@ object Session : TsClient.Listener {
     fun stopWatching() = engine?.stopWatching()
     fun stopShare() = engine?.stopShare()
     fun flipCamera() = engine?.flipCamera()
+    fun setTorch(on: Boolean) = engine?.setTorch(on)
+    fun setZoom(zoom: Float) = engine?.setZoom(zoom)
+    fun nextLens() = engine?.nextLens()
+    fun focusAt(x: Float, y: Float) = engine?.focusAt(x, y)
     fun setWatchMuted(muted: Boolean) = engine?.setWatchMuted(muted)
     fun setWatchVolume(volume: Float) = engine?.setWatchVolume(volume)
 
@@ -186,7 +198,7 @@ object Session : TsClient.Listener {
     // would hear us twice, a moment apart)
     private fun streamSoundPaused(): Boolean {
         val s = _state.value
-        return s.inputMuted || !s.micAllowed || s.ownId in s.talking
+        return s.inputMuted || !s.micAllowed || s.ownId in _voices.value.talking
     }
 
     /** Whether a screen share carries what the phone plays. */
@@ -264,12 +276,20 @@ object Session : TsClient.Listener {
     /** What the last connect asked for, to get a lost connection back. */
     private data class Target(
         val address: String, val nickname: String, val password: String, val filePort: Int? = null,
-        // From a TeamSpeak link: the channel to join first, and a privilege key the person agreed to use (once)
+        // From a TeamSpeak link or a favourite: the channel to join first, and a privilege key the person agreed to use
+        // (once). A favourite's channel also has its id from an earlier visit (0 when none yet), and hears where the
+        // channel turned out to be (its id and path), to remember it.
         val channel: String = "", val channelPassword: String = "", val privilegeKey: String = "",
+        val channelId: Int = 0, val onChannel: ((Int, String) -> Unit)? = null,
     )
     private var target: Target? = null
     private var channelFallback = false
-    private var attemptedChannel = ""
+    // The channel asked for when connecting, until we see where the server put us: it doesn't refuse a missing channel
+    // or a wrong password, it just puts us in its default channel. Looked at once the whole channel list is in: a TS6
+    // server tells where we are after the list's first part already.
+    private var channelAskedFor: Target? = null
+    private var channelListDone = false
+    private var attemptedJoin: Target? = null
     private var retries = 0
     private var oldWaits = 0 // tries refused because the server still had our old connection
     @Volatile private var wasConnected = false // only a connection that worked is tried again
@@ -280,14 +300,19 @@ object Session : TsClient.Listener {
     fun connect(
         context: Context, address: String, nickname: String, serverPassword: String, filePort: Int? = null,
         channel: String = "", channelPassword: String = "", privilegeKey: String = "",
+        channelId: Int = 0, onChannel: ((Int, String) -> Unit)? = null,
     ) {
         app = context.applicationContext
+        connectTo(Target(address, nickname, serverPassword, filePort, channel, channelPassword, privilegeKey, channelId, onChannel))
+    }
+
+    private fun connectTo(t: Target) {
         if (_state.value.phase != Phase.IDLE) return
         channelFallback = false
         retries = 0
         oldWaits = 0
         wasConnected = false
-        target = Target(address, nickname, serverPassword, filePort, channel, channelPassword, privilegeKey)
+        target = t
         start(keepChat = false)
     }
 
@@ -300,7 +325,8 @@ object Session : TsClient.Listener {
         val t = levelTarget ?: return
         levelTarget = null
         _state.update { it.copy(neededLevel = 0) }
-        connect(app, t.address, t.nickname, t.password, t.filePort, t.channel, t.channelPassword, t.privilegeKey)
+        // With all of it: a link's channel, its password and privilege key (not used yet, as the server refused us first)
+        connectTo(t)
     }
 
     /** The security level wasn't raised (enough): the server's need is let be, and said why we're not connected. */
@@ -321,6 +347,7 @@ object Session : TsClient.Listener {
         }
         val prev = _state.value
         if (!keepChat) synchronized(historyLock) { historyServer = null }
+        _voices.value = Voices()
         _state.value = UiState(
             phase = Phase.CONNECTING, address = address, inputMuted = prev.inputMuted, outputMuted = prev.outputMuted,
             volumes = Settings(app).volumes(), voice = VoiceSettings.load(app), micAllowed = micPermitted(),
@@ -346,15 +373,23 @@ object Session : TsClient.Listener {
                 restoreHistory(address)
             }
             startAudio()
-            attemptedChannel = if (channelFallback) "" else ChannelPreferences(app).load(address).channel(t.channel, reconnecting = wasConnected)
+            val preferences = ChannelPreferences(app).load(address)
+            val joining = connectionChannel(preferences, t.channel, t.channelPassword, t.channelId, wasConnected) {
+                ChannelPasswords(app).get(address, it).orEmpty()
+            }
+            attemptedJoin = joining.takeIf { it.path.isNotBlank() }?.let {
+                t.copy(channel = it.path, channelPassword = it.password, channelId = it.id,
+                    onChannel = t.onChannel.takeIf { _ -> it.explicit })
+            }
+
             client = TsClient(this) { AppLog.log(it) }.also {
                 files = FileTransfer(it, portOverride = filePort)
                 it.connect(
                     TsClient.Options(
                         host = target.host, port = target.port, identity = identity,
-                        nickname = nickname.ifBlank { "PocketTS user" }, serverPassword = serverPassword,
-                        defaultChannel = attemptedChannel, defaultChannelPassword = if (attemptedChannel == t.channel) t.channelPassword else
-                            attemptedChannel.removePrefix("/").toIntOrNull()?.let { ChannelPasswords(app).get(address, it) }.orEmpty(),
+                        nickname = nickname.ifBlank { "AlfredTS user" }, serverPassword = serverPassword,
+                        defaultChannel = if (channelFallback) "" else joining.path,
+                        defaultChannelPassword = if (channelFallback) "" else joining.password,
                     )
                 )
             }
@@ -377,7 +412,10 @@ object Session : TsClient.Listener {
     }
 
     // The last join asked for, until the server answers it (by its return code)
-    private class PendingJoin(val channel: Int, val password: String, val remember: Boolean, val code: String)
+    private class PendingJoin(
+        val channel: Int, val password: String, val remember: Boolean, val code: String,
+        val initialRequest: Target? = null,
+    )
     @Volatile private var pendingJoin: PendingJoin? = null
     private var joins = 0
 
@@ -387,9 +425,16 @@ object Session : TsClient.Listener {
      * channel passwords (a refusal then asks for the password).
      */
     fun joinChannel(channelId: Int, password: String = "", remember: Boolean = false, quiet: Boolean = false) {
+        requestChannelJoin(channelId, password, remember, quiet)
+    }
+
+    private fun requestChannelJoin(
+        channelId: Int, password: String, remember: Boolean = false, quiet: Boolean = false,
+        initialRequest: Target? = null,
+    ) {
         val c = client ?: return
         val code = (if (quiet) "quiet-join-" else "join-") + (++joins)
-        pendingJoin = PendingJoin(channelId, password, remember, code)
+        pendingJoin = PendingJoin(channelId, password, remember, code, initialRequest)
         c.sendCommand(
             Commands.build(
                 "clientmove", "cid" to channelId, "clid" to c.clientId, "cpw" to Crypto.hashPassword(password).ifEmpty { null },
@@ -416,6 +461,13 @@ object Session : TsClient.Listener {
         val saved = ChannelPasswords(app)
         val address = _state.value.address
         val id = cmd["id"]
+        join.initialRequest?.let { asked ->
+            if (id == "0") {
+                rememberRequestedChannel(asked, join.channel, channelPath(join.channel))
+                return
+            }
+            _state.update { it.copy(error = app.getString(R.string.channel_not_joined, asked.channel)) }
+        }
         when {
             id == "0" -> when {
                 join.password.isEmpty() -> {}
@@ -563,7 +615,23 @@ object Session : TsClient.Listener {
         sender?.testing = on
     }
 
-    fun updateVoice(v: VoiceSettings) {
+    /**
+     * This phone plays call audio from its earpiece though the loudspeaker was asked for: the loudspeaker is what was
+     * chosen, so voices play as media from now on (that's always the loudspeaker), without echo cancellation, and it's
+     * said why. Remembered, so the next connection doesn't start in the earpiece.
+     */
+    private fun speakerRefused() {
+        val v = _state.value.voice
+        if (v.earpiece || !v.callAudio || !::app.isInitialized) return
+        val now = v.copy(speakerRefusedAt = BuildConfig.VERSION_CODE)
+        now.save(app)
+        _state.update { it.copy(voice = now, error = app.getString(R.string.echo_refused)) }
+        if (_state.value.phase != Phase.IDLE) worker.execute { stopAudio(); startAudio() }
+    }
+
+    fun updateVoice(new: VoiceSettings) {
+        // The earpiece chosen: the loudspeaker gets its try again when it's chosen next
+        val v = if (new.earpiece && new.speakerRefusedAt != 0) new.copy(speakerRefusedAt = 0) else new
         val old = _state.value.voice
         v.save(app)
         _state.update { it.copy(voice = v) }
@@ -571,23 +639,39 @@ object Session : TsClient.Listener {
         player?.voiceGain = v.voiceGain
         if (v.activation != VoiceSettings.Activation.PTT) setPtt(false)
         if (_state.value.phase == Phase.IDLE) return
-        if (v.echoCancellation != old.echoCancellation) {
+        if (v.callAudio != old.callAudio) {
             // Call audio or media: playback and the microphone start again
             worker.execute { stopAudio(); startAudio() }
-        } else if (v.noiseSuppression != old.noiseSuppression || v.autoGainControl != old.autoGainControl) {
-            sender?.reconfigure()
+        } else {
+            if (v.noiseSuppression != old.noiseSuppression || v.autoGainControl != old.autoGainControl) sender?.reconfigure()
+            // The loudspeaker or the earpiece, headphones or not: followed while connected
+            if (v.earpiece != old.earpiece || v.useHeadset != old.useHeadset) {
+                route?.set(v.earpiece, v.useHeadset)
+                player?.device = phoneSpeaker(v)
+            }
         }
     }
 
+    /**
+     * As media, Android plays voices from connected headphones by itself: with those not to be used, the voices are
+     * told to the phone's own loudspeaker (null: Android's choice, or call audio, which [AudioRoute] sends).
+     */
+    private fun phoneSpeaker(v: VoiceSettings): android.media.AudioDeviceInfo? =
+        if (v.callAudio || v.useHeadset) null
+        else app.getSystemService(android.media.AudioManager::class.java).getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)
+            .firstOrNull { it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+
     private fun startAudio() {
         val v = _state.value.voice
-        if (v.echoCancellation) route = AudioRoute(app).also { it.start() }
-        player = VoicePlayer(v.echoCancellation, ::setTalking).also {
+        if (v.callAudio) route = AudioRoute(app, ::speakerRefused).also { it.start(v.earpiece, v.useHeadset) }
+        player = VoicePlayer(v.callAudio, ::setTalking).also {
+            it.device = phoneSpeaker(v)
             it.muted = _state.value.outputMuted
             it.voiceGain = v.voiceGain
         }
         updateGains()
         if (micPermitted()) startSender()
+        route?.audioStarted()
     }
 
     private fun startSender() {
@@ -606,6 +690,7 @@ object Session : TsClient.Listener {
             it.muted = _state.value.inputMuted
             it.whisperHeld = _state.value.whisperHeld
         }
+        route?.audioStarted() // also when the microphone is allowed only later
     }
 
     private fun stopAudio() {
@@ -848,6 +933,8 @@ object Session : TsClient.Listener {
         if (s.waitingForOld) _state.update { it.copy(waitingForOld = false) }
         wasConnected = true
         channelFallback = false
+        channelAskedFor = attemptedJoin
+        channelListDone = false
         if (s.reconnecting > 0) _state.update { it.copy(reconnecting = 0) }
         if (s.away) client?.sendCommand(Commands.build("clientupdate", "client_away" to true, "client_away_message" to s.awayMessage))
         if (s.inputMuted || s.outputMuted) {
@@ -1179,7 +1266,8 @@ object Session : TsClient.Listener {
                 if (cmd["id"] == LEVEL_TOO_LOW && _state.value.phase == Phase.CONNECTING) {
                     neededLevel = cmd["extra_msg"]?.toIntOrNull() ?: 0
                 }
-                pendingJoin?.takeIf { it.code == cmd["return_code"] }?.let {
+                val answeredJoin = pendingJoin?.takeIf { it.code == cmd["return_code"] }
+                answeredJoin?.let {
                     pendingJoin = null
                     joinAnswered(it, cmd)
                 }
@@ -1193,7 +1281,7 @@ object Session : TsClient.Listener {
                 }
                 if (cmd["id"] != "0" && cmd["return_code"]?.let { it.startsWith("ft-") || it.startsWith("quiet-") || it.startsWith("admin-") } != true) {
                     AppLog.log("Server error ${cmd["id"]}: ${LogPrivacy.text(cmd["msg"])}")
-                    if (_state.value.phase == Phase.CONNECTED) _state.update { it.copy(error = cmd["msg"]) }
+                    if (_state.value.phase == Phase.CONNECTED && answeredJoin?.initialRequest == null) _state.update { it.copy(error = cmd["msg"]) }
                 }
             }
         }
@@ -1202,6 +1290,8 @@ object Session : TsClient.Listener {
         val cues = eventCues(cmd)
         val result = chat.handle(cmd, model) // before the model: a move's line needs where they were
         val changed = model.apply(cmd)
+        if (cmd.name == "channellistfinished") channelListDone = true
+        if (channelListDone) channelAskedFor?.let { asked -> model.ownClient?.let { me -> channelReached(asked, me.channel) } }
         result.poke?.let { poked(it) }
         val message = result.message
         // In the log, that something happened in the chat: never what was said, nor with whom
@@ -1228,18 +1318,53 @@ object Session : TsClient.Listener {
         }
     }
 
+    /**
+     * Where the server put us, against the channel asked for (its path, "Parent/Child", or "/id"). Somewhere else: the
+     * channel is looked for in the list, by the id from an earlier visit (it was renamed or moved) or by its path in
+     * other letter case, and joined; a wrong password there asks for it again. Not found: a warning.
+     */
+    private fun channelReached(asked: Target, cid: Int) {
+        channelAskedFor = null
+        val path = ::channelPath
+        val knownId = asked.channelId.takeIf { it in model.channels }
+        val reached = if (knownId != null) knownId == cid else asked.channel == path(cid) || asked.channel == "/$cid"
+        val found = if (reached) cid else knownId
+            ?: asked.channel.takeIf { it.startsWith("/") }?.drop(1)?.toIntOrNull()?.takeIf { it in model.channels }
+            ?: model.channels.keys.firstOrNull { path(it).equals(asked.channel, ignoreCase = true) }
+        if (found == null) {
+            AppLog.log("The channel asked for wasn't joined")
+            _state.update { it.copy(error = app.getString(R.string.channel_not_joined, asked.channel)) }
+            return
+        }
+        if (!reached) {
+            AppLog.log("The channel asked for was found under another name, joining it")
+            requestChannelJoin(found, asked.channelPassword, initialRequest = asked)
+        } else {
+            rememberRequestedChannel(asked, found, path(found))
+        }
+    }
+
+    private fun channelPath(id: Int) = generateSequence(model.channels[id]) { model.channels[it.parent] }
+        .toList().asReversed().joinToString("/") { it.name }
+
+    private fun rememberRequestedChannel(asked: Target, id: Int, path: String) {
+        val callback = asked.onChannel ?: return
+        if (id != asked.channelId || path != asked.channel) callback(id, path)
+        target = target?.copy(channel = "/$id", channelId = id, onChannel = null)
+    }
+
     override fun onVoice(voice: TsClient.Voice) {
         player?.onVoice(voice)
         // Who's whispering to us (until they stop, or talk to the channel instead)
-        if (voice.data.isNotEmpty() && (voice.clientId in _state.value.whispering) != voice.whisper) {
-            _state.update { s -> s.copy(whispering = if (voice.whisper) s.whispering + voice.clientId else s.whispering - voice.clientId) }
+        if (voice.data.isNotEmpty() && (voice.clientId in _voices.value.whispering) != voice.whisper) {
+            _voices.update { v -> v.copy(whispering = if (voice.whisper) v.whispering + voice.clientId else v.whispering - voice.clientId) }
         }
     }
 
     override fun onDisconnected(reason: String?) {
         // Why, as the kind of end; the words can be someone's (a kick reason)
         AppLog.log("Disconnected (${client?.end ?: "left"})" + (reason?.let { ": ${LogPrivacy.message(it)}" } ?: ""))
-        if (!channelFallback && attemptedChannel.isNotEmpty() && client?.refusal in setOf("768", "769", "770", WRONG_CHANNEL_PASSWORD, NO_PERMISSION) && target != null) {
+        if (!channelFallback && attemptedJoin != null && client?.refusal in setOf("768", "769", "770", WRONG_CHANNEL_PASSWORD, NO_PERMISSION) && target != null) {
             channelFallback = true
             files?.onDisconnected()
             files = null
@@ -1273,10 +1398,11 @@ object Session : TsClient.Listener {
             _state.update {
                 it.copy(
                     phase = Phase.CONNECTING, reconnecting = retries, waitingForOld = oldStillThere,
-                    error = if (oldStillThere) null else text, talking = emptySet(), whispering = emptySet(),
+                    error = if (oldStillThere) null else text,
                 )
             }
             clearWhisper() // people come back with new ids
+            _voices.value = Voices()
             ConnectionService.start(app, app.getString(R.string.notification_reconnecting, _state.value.address))
             scheduleRetry(if (oldStillThere) 3L else minOf(30L, 2L * retries))
             return
@@ -1375,6 +1501,7 @@ object Session : TsClient.Listener {
         if (::app.isInitialized) CallWatcher.stop(app)
         endCall()
         val s = _state.value
+        _voices.value = Voices()
         _state.value = UiState(
             phase = Phase.IDLE, error = if (level > 0) null else reason, address = s.address, inputMuted = s.inputMuted,
             outputMuted = s.outputMuted, volumes = s.volumes, voice = s.voice, micAllowed = s.micAllowed, neededLevel = level,
@@ -1388,10 +1515,10 @@ object Session : TsClient.Listener {
 
     /** Someone started or stopped talking; [whisper]: we started whispering (others' whispers come from [onVoice]). */
     private fun setTalking(clientId: Int, talking: Boolean, whisper: Boolean = false) {
-        _state.update { s ->
-            s.copy(
-                talking = if (talking) s.talking + clientId else s.talking - clientId,
-                whispering = if (!talking) s.whispering - clientId else if (whisper) s.whispering + clientId else s.whispering,
+        _voices.update { v ->
+            Voices(
+                talking = if (talking) v.talking + clientId else v.talking - clientId,
+                whispering = if (!talking) v.whispering - clientId else if (whisper) v.whispering + clientId else v.whispering,
             )
         }
         if (clientId == _state.value.ownId) engine?.refreshSound()

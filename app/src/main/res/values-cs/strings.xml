@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Initial AI-generated Czech translation; full native-speaker review is pending. -->
+<!-- Czech. An initial AI-made translation; a native speaker's review is welcome. -->
 <resources>
+    <!-- Shared -->
     <string name="cancel">Zrušit</string>
     <string name="save">Uložit</string>
     <string name="delete">Smazat</string>
@@ -25,16 +26,12 @@
     <string name="nickname">Přezdívka</string>
     <string name="server_address">Adresa nebo přezdívka serveru</string>
     <string name="server_password">Heslo serveru</string>
-    <string name="initial_channel_positioning">Zobrazení vlastního kanálu po připojení</string>
-    <string name="initial_channel_animated">Plynulé posunutí</string>
-    <string name="initial_channel_instant">Okamžitý přesun</string>
-    <string name="remember_last_channel">Zapamatovat poslední kanál</string>
-    <string name="default_channel_name">Název výchozího kanálu</string>
     <string name="remember_password">Zapamatovat heslo</string>
     <string name="channel_password">Heslo kanálu</string>
     <string name="join">Připojit se</string>
+
+    <!-- Connect screen -->
     <string name="favourites">Oblíbené</string>
-    <string name="connect_title">Připojení k serveru</string>
     <string name="favourites_in">V oblíbených</string>
     <string name="favourites_save">Uložit do oblíbených</string>
     <string name="favourite_edit">Upravit oblíbený server</string>
@@ -45,22 +42,51 @@
     <string name="favourite_file_port">Port pro přenos souborů</string>
     <string name="favourite_file_port_hint">Port serveru (obvykle 30033)</string>
     <string name="favourite_file_port_desc">Pouze pokud se nenačítají obrázky a avatary serveru: přenos souborů na serveru používá jiný port.</string>
+    <string name="favourite_folder">Složka</string>
+    <string name="favourite_folder_new">Nová složka…</string>
+    <string name="folder_name">Název složky</string>
+    <string name="folder_edit">Upravit složku</string>
+    <string name="folder_fold">sbalit složku</string>
+    <string name="folder_unfold">rozbalit složku</string>
+    <string name="connect_show">Rozbalit panel připojení</string>
+    <string name="connect_hide">Sbalit panel připojení</string>
+    <string name="community_tab">Komunita</string>
+    <string name="community_desc">Veřejné servery provozované společností TeamSpeak. Klepnutím se připojíte.</string>
+    <string name="community_desc_no_nick">Veřejné servery provozované společností TeamSpeak. Pro připojení zadejte výše přezdívku.</string>
+    <string name="community_worldwide">Celý svět</string>
+    <string name="community_eu_east">Východní Evropa</string>
+    <string name="community_emea">Evropa, Blízký východ a Afrika</string>
+    <string name="community_apac">Asie a Tichomoří</string>
+    <string name="community_latam">Latinská Amerika</string>
+    <string name="community_na">Severní Amerika</string>
+    <string name="favourite_channel">Kanál, do kterého se připojit</string>
+    <string name="favourite_channel_hint">Výchozí kanál serveru</string>
+    <string name="favourite_channel_desc">Název kanálu tak, jak ho zobrazuje server. U kanálu uvnitř jiného zadejte cestu: Hry/Lobby.</string>
+    <string name="channel_not_joined">Do kanálu %1$s se nepodařilo vstoupit: takový kanál neexistuje, nebo je jeho heslo špatné. Jste ve výchozím kanálu serveru.</string>
     <string name="update_title">Vyšla verze AlfredTS %1$s</string>
     <string name="update_text">Na GitHub je dostupná novější verze než tato (%1$s).</string>
     <string name="not_now">Teď ne</string>
     <string name="download">Stáhnout</string>
+
+    <!-- Server screen: header and controls -->
     <string name="settings">Nastavení</string>
     <string name="hold_to_talk">Podržením mluvit</string>
     <string name="microphone">Mikrofon</string>
     <string name="sound">Zvuk</string>
     <string name="share">Sdílet</string>
+
+    <!-- Channel list -->
     <string name="channel_has_password">Heslo</string>
     <string name="person_sound_off">Zvuk vypnutý</string>
     <string name="person_mic_off">Mikrofon vypnutý</string>
     <string name="person_cant_talk">V tomto kanálu nemůže mluvit</string>
     <string name="person_streaming">Vysílá</string>
+    <!-- Short tags after a name, in capitals as in the TeamSpeak app -->
     <string name="tag_afk">AFK</string>
     <string name="tag_you">VY</string>
+
+    <!-- Chat -->
+    <!-- The chat's lines about people coming and going. %1$s and %2$s are names (a person's, a channel's), shown bold -->
     <string name="event_connected">Uživatel %1$s se připojil</string>
     <string name="event_joined_from">%1$s přichází z kanálu %2$s</string>
     <string name="event_you_moved_to">Byli jste přesunuti do kanálu %1$s</string>
@@ -76,16 +102,21 @@
     <string name="event_kicked_from_server">%1$s: vykopnutí ze serveru</string>
     <string name="event_banned">%1$s: zákaz přístupu</string>
     <string name="event_disconnected">Uživatel %1$s se odpojil</string>
+    <!-- Added after a line: who did it (%1$s), and the reason they gave (%1$s). Keep the space at the start -->
     <string name="event_by">" — provedl(a): %1$s"</string>
     <string name="event_because">" (%1$s)"</string>
+    <!-- A channel without a name -->
     <string name="event_another_channel">jiný kanál</string>
     <string name="chat_channel">Kanál</string>
     <string name="chat_empty_channel">V tomto kanálu zatím nejsou žádné zprávy.</string>
     <string name="chat_empty_private">Zatím žádné zprávy.</string>
+    <!-- The message box's hint: %1$s is the channel's or the person's name -->
     <string name="chat_message_to">Zpráva pro %1$s…</string>
     <string name="chat_message_to_channel">Zpráva do kanálu…</string>
     <string name="chat_message_to_them">Soukromá zpráva…</string>
+    <!-- The sender of a line from the server itself -->
     <string name="chat_system">Systém</string>
+    <!-- A link's card: %1$s is the website's name, such as example.com -->
     <string name="chat_link_open">Otevřít: %1$s</string>
     <plurals name="chat_pictures_max">
         <item quantity="one">Najednou lze odeslat nejvýše %1$d obrázek.</item>
@@ -101,9 +132,16 @@
     <string name="chat_choose_pictures">Vybrat obrázky</string>
     <string name="chat_take_photo">Pořídit fotografii</string>
     <string name="chat_send">Odeslat</string>
+
+    <!-- A picture on the whole screen -->
     <string name="picture_save">Uložit do galerie</string>
+    <!-- %1$s is the folder, Pictures/AlfredTS -->
     <string name="picture_saved">Uloženo do %1$s</string>
+    <!-- %1$s is the reason, as the phone gives it -->
     <string name="picture_failed">Nepodařilo se to: %1$s</string>
+
+    <!-- Streams: watching -->
+    <!-- The button next to someone who streams, in capitals as in the TeamSpeak app -->
     <string name="stream_watch">SLEDOVAT</string>
     <string name="stream_small_window">Malé okno</string>
     <string name="stream_full_screen">Celá obrazovka</string>
@@ -123,6 +161,8 @@
     <string name="stream_denied">Žádost o přístup k přenosu byla zamítnuta.</string>
     <string name="stream_ended">Přenos skončil.</string>
     <string name="stream_ended_left_channel">Přenos skončil (už nejste ve stejném kanálu).</string>
+
+    <!-- Streams: sharing -->
     <string name="share_camera_title">Sdílení kamery</string>
     <string name="share_screen_title">Sdílení obrazovky</string>
     <string name="share_subtitle">Sledovat mohou všichni ve vašem kanálu</string>
@@ -161,15 +201,21 @@
     <string name="share_light_off">Přisvícení: jasná bílá obrazovka osvětlí váš obličej</string>
     <string name="share_both_unsupported">Tento telefon nedokáže používat obě kamery současně.</string>
     <string name="share_failed">Sdílení se nepodařilo spustit.</string>
+    <!-- %1$s is TeamSpeak's reason -->
     <string name="share_refused">TeamSpeak odmítl sdílení: %1$s</string>
+
+    <!-- Settings -->
     <string name="settings_general">Obecné</string>
     <string name="settings_playback">Přehrávání</string>
     <string name="settings_capture">Nahrávání</string>
+    <!-- The tab with how the app looks and what it offers -->
     <string name="settings_ui">Rozhraní</string>
     <string name="settings_save">Uložit a použít</string>
     <string name="cant_be_undone">Tuto akci nelze vrátit zpět</string>
     <string name="quiet">Potichu</string>
     <string name="loud">Nahlas</string>
+
+    <!-- Settings › General -->
     <string name="avatar_title">Profilový obrázek</string>
     <string name="avatar_change">Změnit</string>
     <string name="avatar_desc">Ostatní ho uvidí na tomto serveru. Velikost se přizpůsobí na 320 × 320.</string>
@@ -190,6 +236,7 @@
     <string name="general_spacers">Povolit vstup do oddělovacích kanálů</string>
     <string name="general_spacers_desc">Klepnutím na oddělovač (dělicí čáru nebo nadpis v seznamu kanálů) do něj vstoupíte jako do běžného kanálu. Některé servery ho používají jako AFK kanál. Při vypnutí této volby do oddělovače omylem nevstoupíte.</string>
     <string name="history_title">Historie chatu</string>
+    <!-- %1$s is how many days (history_days), %2$s how many lines (history_lines) -->
     <string name="history_desc">Zprávy v kanálech, soukromé zprávy a události příchodů a odchodů se ukládají zašifrovaně v tomto telefonu. Při připojení ke stejnému serveru se znovu zobrazí: za poslední %1$s, nejvýše %2$s na konverzaci. Šťouchnutí se neukládají.</string>
     <plurals name="history_days">
         <item quantity="one">%1$d den</item>
@@ -208,6 +255,8 @@
     <string name="history_clear_title">Vymazat historii chatu?</string>
     <string name="history_clear_button">Vymazat</string>
     <string name="history_clear_desc">Z tohoto telefonu se odstraní uložená historie všech serverů i právě zobrazený chat.</string>
+
+    <!-- Settings › Playback -->
     <string name="playback_voice_volume">Hlasitost hlasů</string>
     <string name="playback_test_sound">Přehrát zkušební zvuk</string>
     <string name="playback_event_sounds">Zvuky událostí</string>
@@ -216,6 +265,15 @@
     <string name="playback_play_sound">Přehrát zvuk</string>
     <string name="playback_call_volume">Při zapnutém potlačení ozvěny se hlasitost hlasů řídí hlasitostí hovoru: během připojení stiskněte tlačítko hlasitosti.</string>
     <string name="playback_media_volume">Hlasitost hlasů se řídí hlasitostí médií.</string>
+    <string name="playback_output">Hlasy se přehrávají přes</string>
+    <string name="playback_output_speaker">Reproduktor</string>
+    <string name="playback_output_earpiece">Sluchátko telefonu</string>
+    <string name="playback_output_speaker_desc">Hlasy se přehrávají z reproduktoru telefonu, takže ho nemusíte držet.</string>
+    <string name="playback_output_earpiece_desc">Jako při telefonním hovoru: držte telefon u ucha. Obrazovka se přitom vypne.</string>
+    <string name="playback_headset">Používat připojená sluchátka</string>
+    <string name="playback_headset_desc">Připojená sluchátka, náhlavní souprava nebo Bluetooth reproduktor přehrávají hlasy. Vypnuto: hlasy vždy přehrává samotný telefon.</string>
+
+    <!-- Settings › Capture -->
     <string name="capture_mic_volume">Hlasitost mikrofonu</string>
     <string name="capture_activation">Aktivace</string>
     <string name="capture_vad">Hlasová aktivace</string>
@@ -229,15 +287,21 @@
     <string name="capture_vad_delay">Prodleva před deaktivací</string>
     <string name="capture_processing">Zpracování signálu</string>
     <string name="capture_noise">Potlačit hluk na pozadí</string>
-    <string name="capture_echo">Potlačení ozvěny</string>
+    <string name="capture_echo">Potlačení ozvěny (režim hovoru)</string>
     <string name="capture_agc">Automatické řízení zesílení</string>
-    <string name="capture_echo_desc">Při potlačení ozvěny se hlasy přehrávají jako při telefonním hovoru (přes reproduktor nebo sluchátka). Pro nejlepší zvuk ve sluchátkách tuto funkci vypněte.</string>
+    <string name="capture_echo_desc">Hlasy se přehrávají jako při telefonním hovoru: přes náhlavní soupravu, jinak přes reproduktor telefonu. Bluetooth reproduktor bez mikrofonu se nepoužije a Bluetooth sluchátka přepnou na zvuk hovoru, i pro ostatní aplikace. Pro nejlepší zvuk a pro Bluetooth reproduktory funkci vypněte a používejte sluchátka nebo mluvení po stisku, aby mikrofon nesnímal reproduktor.</string>
+    <string name="capture_echo_earpiece">Zapnuto, dokud se hlasy přehrávají přes sluchátko telefonu (Přehrávání): to funguje jen v režimu hovoru, který má potlačení ozvěny.</string>
+    <string name="echo_refused">Tento telefon neumí přehrávat hlasy s potlačením ozvěny přes reproduktor, proto je potlačení ozvěny vypnuté. Ozvěně zabrání mluvení po stisku nebo sluchátka.</string>
+
+    <!-- Settings › UI -->
     <string name="ui_admin">Zobrazovat funkce správce</string>
     <string name="ui_controls_bottom">Tlačítka dole</string>
     <string name="ui_controls_bottom_desc">Tlačítka mikrofonu, zvuku a sdílení i přepínač Kanály/Chat se zobrazují dole na obrazovce, v dosahu palce.</string>
     <string name="ui_language">Jazyk</string>
     <string name="ui_language_phone">Jazyk telefonu</string>
     <string name="ui_admin_desc">Nabídka uživatele navíc umožní přesun do jiného kanálu, vykopnutí z kanálu či serveru a zákaz přístupu. O povolení rozhoduje server: bez příslušného oprávnění akci odmítne.</string>
+
+    <!-- Settings › Advanced -->
     <string name="relay_title">Připojení videa</string>
     <string name="relay_desc">Přenosy probíhají přímo mezi vámi a druhou stranou. V některých sítích potřebují prostředníka (server TURN). Pokud ho máte, zadejte ho zde.</string>
     <string name="relay_address">Zprostředkující server (turn:host:port)</string>
@@ -273,8 +337,11 @@
     <string name="level_title">Úroveň zabezpečení</string>
     <string name="level_desc">Některé servery povolují připojení jen identitám s určitou minimální úrovní. Zvýšení úrovně zachová identitu i její skupiny a oprávnění.</string>
     <string name="level_raise_button">Zvýšit úroveň</string>
+
+    <!-- A person's menu -->
     <string name="person_you">Vy</string>
     <string name="person_away">Nepřítomnost</string>
+    <!-- %1$s is their away message -->
     <string name="person_away_message">Nepřítomnost: %1$s</string>
     <string name="person_volume">Hlasitost pro vás</string>
     <string name="away_message_field">Zpráva o nepřítomnosti (nepovinná)</string>
@@ -283,17 +350,23 @@
     <string name="away_set">Nastavit nepřítomnost</string>
     <string name="poke">Šťouchnout</string>
     <string name="chat">Chat</string>
+    <!-- %1$s is the person's name -->
     <string name="poke_title">Šťouchnout uživatele %1$s</string>
     <string name="poke_subtitle">Zobrazí se mu okno s vaší zprávou</string>
     <string name="poke_message_field">Zpráva (nepovinná)</string>
+    <!-- A poke received: %1$s is who poked -->
     <string name="poked_you">%1$s vám posílá šťouchnutí</string>
     <string name="dismiss">Zavřít</string>
+
+    <!-- A person's menu: admin functions (Settings › UI) -->
     <string name="admin_row">Správce</string>
     <string name="admin_move">Přesunout</string>
     <string name="admin_kick">Vykopnout</string>
     <string name="admin_ban">Zakázat přístup</string>
+    <!-- %1$s is the person's name -->
     <string name="admin_move_title">Přesunout uživatele %1$s</string>
     <string name="admin_move_subtitle">Vyberte kanál</string>
+    <!-- The channel the person is in now -->
     <string name="admin_here_now">Aktuální kanál</string>
     <string name="admin_has_password">Chráněno heslem</string>
     <string name="admin_kick_title">Vykopnout uživatele %1$s</string>
@@ -308,6 +381,8 @@
     <string name="ban_1_day">1 den</string>
     <string name="ban_1_week">1 týden</string>
     <string name="ban_permanently">Trvale</string>
+
+    <!-- Server info -->
     <string name="info_title">Informace o serveru</string>
     <string name="key_button">Klíč oprávnění</string>
     <string name="key_title">Použití klíče oprávnění</string>
@@ -320,6 +395,7 @@
     <string name="info_channels">Kanály</string>
     <string name="info_uptime">Doba běhu</string>
     <string name="info_created">Vytvořeno</string>
+    <!-- %1$s is a time span, such as "3 months" -->
     <string name="info_ago">%1$s zpět</string>
     <plurals name="span_minutes">
         <item quantity="one">%1$d minuta</item>
@@ -351,14 +427,20 @@
         <item quantity="other">%1$d let</item>
         <item quantity="many">%1$d roku</item>
     </plurals>
+
+    <!-- Raising the security level -->
+    <!-- %1$d is the level the server needs -->
     <string name="level_needed_title">Je vyžadována úroveň zabezpečení %1$d</string>
     <string name="level_raise_title">Zvýšení úrovně zabezpečení</string>
+    <!-- %1$d is the identity's level now -->
     <string name="level_needed_subtitle">Tento server ji vyžaduje. Vaše úroveň je %1$d.</string>
     <string name="level_yours">Vaše úroveň je %1$d</string>
     <string name="level_raise">Zvýšit</string>
+    <!-- %1$s is a rough time, such as "about 3 minutes" -->
     <string name="level_estimate">Na tomto telefonu to trvá v průměru %1$s. Může to být rychlejší i pomalejší.</string>
     <string name="level_measuring">Odhadování potřebného času na tomto telefonu…</string>
     <string name="level_desc_raise">Úroveň stačí zvýšit jednou. Identita zůstane stejná: skupiny a oprávnění se zachovají a vyšší úroveň platí na všech serverech. Během výpočtu nechte aplikaci otevřenou. Tlačítko Zastavit zachová dosud dosaženou úroveň.</string>
+    <!-- %1$d is the level reached, %2$d the level aimed at -->
     <string name="level_progress">Úroveň %1$d z %2$d</string>
     <string name="level_running_desc">Nechte aplikaci otevřenou. Každá další úroveň trvá přibližně dvakrát déle než předchozí.</string>
     <string name="level_done">Hotovo: vaše úroveň zabezpečení je %1$d.</string>
@@ -383,21 +465,31 @@
         <item quantity="other">asi %1$d dní</item>
         <item quantity="many">asi %1$d dne</item>
     </plurals>
+
+    <!-- Server screen -->
     <string name="servers">Servery</string>
     <string name="connected">Připojeno</string>
+    <!-- %1$s is the server's address -->
     <string name="connecting_to">Připojování k %1$s…</string>
     <string name="reconnecting_old">Opětovné připojování… Server stále eviduje vaše předchozí spojení. Čekáme, než ho uvolní.</string>
+    <!-- %1$d is which try this is -->
     <string name="reconnecting_try">Spojení bylo ztraceno. Opětovné připojování… (pokus %1$d)</string>
     <string name="channel_password_subtitle">Tento kanál je chráněný heslem</string>
     <string name="view_channels">Kanály</string>
+    <!-- The stream player's title: %1$s is whose stream -->
     <string name="stream_title">Přenos uživatele %1$s</string>
     <string name="stream_title_unknown">Přenos</string>
     <string name="not_an_address">Toto nevypadá jako adresa serveru</string>
+    <!-- A private chat's person left: %1$s is their name -->
     <string name="private_left">Uživatel %1$s opustil server</string>
     <string name="private_left_unknown">Uživatel opustil server</string>
     <string name="level_not_connected">Nepřipojeno: server vyžaduje úroveň zabezpečení identity %1$d. Zvýšit ji můžete v Nastavení › Pokročilé.</string>
+
+    <!-- Why a connection ended -->
     <string name="end_no_answer">Připojení se nezdařilo: server neodpovídá. Zkontrolujte adresu a port.</string>
+    <!-- %1$s is the address typed -->
     <string name="end_no_such_host">Připojení se nezdařilo: na adrese „%1$s“ nebyl nalezen server. Zkontrolujte adresu.</string>
+    <!-- %1$s is the phone's own error -->
     <string name="end_cant_connect">Připojení se nezdařilo: %1$s</string>
     <string name="end_network_error">Chyba sítě: %1$s</string>
     <string name="end_network_changed">Síť se změnila</string>
@@ -408,6 +500,7 @@
     <string name="end_handshake">Nepodařilo se navázat spojení se serverem.</string>
     <string name="end_by_server">Server vás odpojil</string>
     <string name="end_kicked_channel">Byli jste vykopnuti z kanálu</string>
+    <!-- %1$s is the reason the admin gave -->
     <string name="end_kicked_channel_reason">Byli jste vykopnuti z kanálu: %1$s</string>
     <string name="end_kicked">Byli jste vykopnuti ze serveru</string>
     <string name="end_kicked_reason">Byli jste vykopnuti ze serveru: %1$s</string>
@@ -415,6 +508,8 @@
     <string name="end_banned_reason">Máte zakázán přístup na server: %1$s</string>
     <string name="end_shut_down">Server byl vypnut</string>
     <string name="end_shut_down_reason">Server byl vypnut: %1$s</string>
+
+    <!-- Admin actions the server refused: %1$s is the person's name, %2$s the server's reason -->
     <string name="admin_no_permission_move">Nemáte oprávnění přesunout uživatele %1$s.</string>
     <string name="admin_no_permission_kick_channel">Nemáte oprávnění vykopnout uživatele %1$s z kanálu.</string>
     <string name="admin_no_permission_kick_server">Nemáte oprávnění vykopnout uživatele %1$s ze serveru.</string>
@@ -423,10 +518,12 @@
     <string name="admin_failed_kick_channel">Nepodařilo se vykopnout uživatele %1$s z kanálu: %2$s</string>
     <string name="admin_failed_kick_server">Nepodařilo se vykopnout uživatele %1$s ze serveru: %2$s</string>
     <string name="admin_failed_ban">Nepodařilo se zakázat přístup uživateli %1$s: %2$s</string>
+    <!-- %1$s: the channel -->
     <string name="channel_no_permission_create">Nemáte oprávnění vytvořit kanál %1$s.</string>
     <string name="channel_no_permission_edit">Nemáte oprávnění upravit kanál %1$s.</string>
     <string name="channel_no_permission_reorder">Nemáte oprávnění přesunout kanál %1$s.</string>
     <string name="channel_no_permission_delete">Nemáte oprávnění smazat kanál %1$s.</string>
+    <!-- %1$s: the channel, %2$s: the server's reason -->
     <string name="channel_failed_create">Nepodařilo se vytvořit kanál %1$s: %2$s</string>
     <string name="channel_failed_edit">Nepodařilo se upravit kanál %1$s: %2$s</string>
     <string name="channel_failed_reorder">Nepodařilo se přesunout kanál %1$s: %2$s</string>
@@ -499,6 +596,7 @@
     <string name="channel_codec">Hlasový kodek</string>
     <string name="channel_codec_voice">Opus Voice</string>
     <string name="channel_codec_music">Opus Music</string>
+    <!-- %1$d: 0 to 10 -->
     <string name="channel_quality">Kvalita: %1$d</string>
     <string name="channel_unlimited">Neomezený počet uživatelů</string>
     <string name="channel_max_users">Nejvyšší počet uživatelů</string>
@@ -506,6 +604,7 @@
     <string name="channel_top_level">Nejvyšší úroveň</string>
     <string name="channel_parent_change">Změnit</string>
     <string name="channel_parent_title">Umístění kanálu</string>
+    <!-- %1$s: the channel -->
     <string name="channel_delete_title">Smazat %1$s?</string>
     <string name="channel_delete_subtitle">Tuto akci nelze vrátit zpět.</string>
     <plurals name="channel_delete_subs">
@@ -522,27 +621,38 @@
     </plurals>
     <string name="channel_delete_empty">V kanálu nikdo není.</string>
     <string name="admin_move_needs_password">Nepodařilo se přesunout uživatele %1$s: kanál vyžaduje heslo. Nejprve do něj vstupte s heslem a zvolte jeho zapamatování. Potom do něj budete moci přesouvat uživatele.</string>
+
+    <!-- Sending pictures: %1$s / %3$s is the reason -->
     <string name="picture_not_sent">Obrázek nebyl odeslán: %1$s</string>
+    <!-- %1$d is which picture, %2$d of how many -->
     <string name="pictures_not_sent">Obrázek %1$d z %2$d nebyl odeslán: %3$s</string>
     <string name="picture_no_permission">%1$s (chybí oprávnění v tomto kanálu)</string>
+    <!-- %1$d is the limit in megabytes -->
     <string name="picture_too_big">Obrázek je příliš velký (více než %1$d MB).</string>
+
+    <!-- Profile picture -->
     <string name="avatar_uploading">Nahrávání…</string>
     <string name="avatar_set">Profilový obrázek byl nastaven.</string>
     <string name="avatar_too_big">Tento server povoluje jen velmi malý profilový obrázek, nebo žádný.</string>
     <string name="avatar_not_allowed">Tento server vám nepovoluje profilový obrázek.</string>
     <string name="avatar_failed">Profilový obrázek se nepodařilo nastavit: %1$s</string>
     <string name="avatar_removed">Profilový obrázek byl odstraněn.</string>
+
+    <!-- The identity -->
     <string name="identity_not_valid">Toto není identita TeamSpeak.</string>
     <string name="identity_unreadable">Uloženou identitu nelze na tomto telefonu otevřít. Importujte svou identitu v Nastavení › Pokročilé › Identita TeamSpeak nebo tam vytvořte novou.</string>
     <string name="identity_export_unreadable">Identitu nelze přečíst, a proto ji nelze uložit.</string>
     <string name="file_not_written">Soubor se nepodařilo zapsat.</string>
     <string name="file_not_opened">Soubor nelze otevřít.</string>
+
+    <!-- Notifications -->
     <string name="notification_channel">Připojení</string>
     <string name="notification_mute">Ztlumit mikrofon</string>
     <string name="notification_unmute">Zapnout mikrofon</string>
     <string name="notification_sound_off">Vypnout zvuk</string>
     <string name="notification_sound_on">Zapnout zvuk</string>
     <string name="notification_messages">Zprávy a šťouchnutí</string>
+    <!-- %1$s is the server's name or address -->
     <string name="notification_connected">Připojeno k %1$s</string>
     <string name="notification_connecting">Připojování k %1$s</string>
     <string name="notification_reconnecting">Opětovné připojování k %1$s…</string>
@@ -562,6 +672,11 @@
     <string name="capture_ai_noise">Potlačení hluku pomocí AI (RNNoise)</string>
     <string name="capture_ai_noise_desc">Malá neuronová síť přímo v telefonu odstraňuje i zvuky klávesnice, ventilátoru, televize a další hluk, který běžné potlačení v telefonu propouští. Mírně zvyšuje spotřebu baterie.</string>
     <string name="capture_ai_noise_license">Licence RNNoise</string>
+    <string name="share_torch_on">Svítilna zapnutá (klepnutím vypnete)</string>
+    <string name="share_torch_off">Svítilna: osvětlí, co natáčí zadní kamera</string>
+    <string name="share_camera_lost">Kamera se zastavila: převzal ji hovor, jiná aplikace nebo telefon.</string>
+    <string name="share_preview_small">Zmenšit náhled</string>
+    <string name="share_lens_switch">Objektiv %1$s: klepnutím přepnete na další</string>
     <string name="debug_log_title">Ladicí protokol</string>
     <string name="debug_log">Ukládat ladicí protokol</string>
     <string name="debug_log_desc">Pro hlášení chyb: záznam činnosti aplikace včetně pádů, uložený pouze v tomto telefonu. Adresy serverů, jména a zprávy se odstraňují. Aplikace ho nikdy sama neodesílá. Sdílet ho můžete sami, například v hlášení chyby na GitHub. Vypnutím této volby se smaže.</string>
@@ -569,4 +684,27 @@
     <string name="debug_log_delete">Smazat protokol</string>
     <string name="debug_log_empty">Ladicí protokol je zatím prázdný.</string>
     <string name="debug_log_deleted">Ladicí protokol byl smazán.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">Zapnuto</string>
+    <string name="a11y_off">Vypnuto</string>
+    <string name="a11y_about">O nastavení %1$s</string>
+    <string name="a11y_talk_start">začít mluvit</string>
+    <string name="a11y_talk_stop">přestat mluvit</string>
+    <string name="a11y_whisper_start">začít šeptat</string>
+    <string name="a11y_whisper_stop">přestat šeptat</string>
+    <string name="a11y_talking">Mluví</string>
+    <string name="a11y_whispering">Šeptá</string>
+    <string name="a11y_unread">Nepřečtené zprávy</string>
+    <string name="a11y_move_up">Posunout nahoru</string>
+    <string name="a11y_move_down">Posunout dolů</string>
+    <string name="a11y_show_controls">zobrazit tlačítka</string>
+    <string name="a11y_hide_controls">skrýt tlačítka</string>
+    <string name="a11y_preview_bigger">zvětšit náhled</string>
+    <string name="a11y_preview_smaller">zmenšit náhled</string>
+    <string name="initial_channel_positioning">Zobrazení vlastního kanálu po připojení</string>
+    <string name="initial_channel_animated">Plynulé posunutí</string>
+    <string name="initial_channel_instant">Okamžitý přesun</string>
+    <string name="remember_last_channel">Zapamatovat poslední kanál</string>
+    <string name="default_channel_name">Název výchozího kanálu</string>
 </resources>

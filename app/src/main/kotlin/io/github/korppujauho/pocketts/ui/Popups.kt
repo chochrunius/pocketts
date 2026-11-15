@@ -10,7 +10,15 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +38,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,11 +71,22 @@ fun TsDialog(
     buttons: @Composable RowScope.() -> Unit,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    // The window takes the whole screen and the keyboard's room is left free here, not by Android resizing a centred
+    // window: that one jumped on every character typed into a field the keyboard covered (the field asks to be
+    // scrolled into view, and the window moved with it). With the keyboard up the card sits at the top, so a change in
+    // the keyboard's height doesn't move it either.
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         val shape = RoundedCornerShape(24.dp)
+        val keyboard = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+        Box(
+            // A tap beside the card closes it, as it did when the window was only the card
+            Modifier.fillMaxSize().pointerInput(onDismiss) { detectTapGestures { onDismiss() } }.windowInsetsPadding(WindowInsets.safeDrawing),
+            contentAlignment = if (keyboard) Alignment.TopCenter else Alignment.Center,
+        ) {
         Column(
             Modifier.padding(horizontal = 18.dp, vertical = 24.dp).widthIn(max = 480.dp).fillMaxWidth()
                 .shadow(24.dp, shape).clip(shape).background(Pop.background).border(1.dp, Pop.edge, shape)
+                .pointerInput(Unit) { detectTapGestures {} } // a tap on the card itself isn't one beside it
                 .padding(start = 22.dp, end = 22.dp, top = 22.dp, bottom = 18.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -74,7 +95,10 @@ fun TsDialog(
                     Spacer(Modifier.width(14.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(title, color = Ts.bright, fontWeight = FontWeight.SemiBold, fontSize = 19.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        title, color = Ts.bright, fontWeight = FontWeight.SemiBold, fontSize = 19.sp, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() },
+                    )
                     if (!subtitle.isNullOrEmpty()) {
                         Text(subtitle, color = Ts.muted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
@@ -91,6 +115,7 @@ fun TsDialog(
                 verticalAlignment = Alignment.CenterVertically,
                 content = buttons,
             )
+        }
         }
     }
 }
@@ -113,7 +138,7 @@ enum class PillKind { PRIMARY, SECONDARY, DANGER, DANGER_TEXT }
 fun PillButton(text: String, kind: PillKind = PillKind.SECONDARY, enabled: Boolean = true, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(22.dp)
     val (bg, fg) = when (kind) {
-        PillKind.PRIMARY -> Ts.accent to Color.White
+        PillKind.PRIMARY -> Ts.accentFill to Color.White
         PillKind.SECONDARY -> Color(0x0FFFFFFF) to Ts.text
         PillKind.DANGER -> Ts.redButton to Color.White
         PillKind.DANGER_TEXT -> Color.Transparent to Color(0xFFF87171)
@@ -121,7 +146,7 @@ fun PillButton(text: String, kind: PillKind = PillKind.SECONDARY, enabled: Boole
     Box(
         modifier.height(44.dp).clip(shape).background(if (enabled) bg else bg.copy(alpha = bg.alpha * 0.4f))
             .then(if (kind == PillKind.SECONDARY) Modifier.border(1.dp, Pop.edge, shape) else Modifier)
-            .clickable(enabled = enabled, onClick = onClick).padding(horizontal = 20.dp),
+            .clickable(enabled = enabled, role = androidx.compose.ui.semantics.Role.Button, onClick = onClick).padding(horizontal = 20.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, color = if (enabled) fg else fg.copy(alpha = 0.5f), fontWeight = FontWeight.SemiBold, fontSize = 15.sp, maxLines = 1)
@@ -145,7 +170,7 @@ fun ActionTile(icon: ImageVector, label: String, modifier: Modifier = Modifier, 
     Column(
         modifier.height(76.dp).clip(RoundedCornerShape(18.dp)).background(if (selected) tint.copy(alpha = 0.16f) else Pop.field)
             .border(1.dp, if (selected) tint else Color(0x0AFFFFFF), RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick),
+            .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

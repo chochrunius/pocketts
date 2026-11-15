@@ -27,6 +27,7 @@ class SavedSecretsTest {
     private val context: Context get() = RuntimeEnvironment.getApplication()
     private fun prefs(name: String) = context.getSharedPreferences(name, Context.MODE_PRIVATE)
     private val original = Secrets.box
+    private fun activeKey(name: String) = Favorites.secretKey(name, prefs("favorites").getBoolean("secretSlot", false))
 
     @Before
     fun softwareKey() {
@@ -41,7 +42,7 @@ class SavedSecretsTest {
     /** Every secret is sealed in the secrets file, and none is left where an earlier version kept it. */
     private fun assertAllInSecrets() {
         for (name in listOf("identity", "serverPassword", "turnPassword", "favorites")) {
-            val stored = prefs("secrets").getString(name, null)
+            val stored = prefs("secrets").getString(if (name == "favorites") activeKey(name) else name, null)
             assertTrue(name, stored != null && SecretBox.isSealed(stored))
         }
         assertFalse(prefs("settings").contains("identity"))
@@ -112,7 +113,29 @@ class SavedSecretsTest {
 
         // No passwords left: nothing kept for them
         Favorites.save(context, Favorites.load(context).map { it.copy(password = "") })
-        assertFalse(prefs("secrets").contains("favorites"))
+        assertFalse(prefs("secrets").contains(activeKey("favorites")))
+    }
+
+    @Test
+    fun favouriteChannelPasswordIsSealedApart() {
+        Favorites.save(
+            context,
+            listOf(Favorite("a.example.com"), Favorite("ts.example.com", channel = "Games/Lobby", channelPassword = "ch pw", channelId = 40)),
+        )
+        assertEquals(listOf(0, 40), Favorites.load(context).map { it.channelId })
+        assertTrue(SecretBox.isSealed(prefs("secrets").getString(activeKey("favoriteChannels"), null)!!))
+        assertFalse(prefs("favorites").getString("list", null)!!.contains("ch pw"))
+        assertEquals(listOf("", "Games/Lobby"), Favorites.load(context).map { it.channel })
+        assertEquals(listOf("", "ch pw"), Favorites.load(context).map { it.channelPassword })
+
+        // On a new phone the channel comes along, its password doesn't
+        prefs("secrets").edit().clear().commit()
+        Secrets.box = SecretBox(SoftwareKey())
+        assertEquals(Favorite("ts.example.com", channel = "Games/Lobby", channelId = 40), Favorites.load(context)[1])
+
+        // No channel passwords left: nothing kept for them
+        Favorites.save(context, Favorites.load(context))
+        assertFalse(prefs("secrets").contains(activeKey("favoriteChannels")))
     }
 
     @Test

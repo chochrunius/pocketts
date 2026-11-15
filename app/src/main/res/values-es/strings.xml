@@ -32,7 +32,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">Favoritos</string>
-    <string name="connect_title">Conectar a un servidor</string>
     <string name="favourites_in">En favoritos</string>
     <string name="favourites_save">Guardar en favoritos</string>
     <string name="favourite_edit">Editar favorito</string>
@@ -43,6 +42,27 @@
     <string name="favourite_file_port">Puerto de transferencia de archivos</string>
     <string name="favourite_file_port_hint">El del servidor (normalmente 30033)</string>
     <string name="favourite_file_port_desc">Solo si las imágenes y los avatares del servidor no cargan: su transferencia de archivos está en otro puerto.</string>
+    <string name="favourite_folder">Carpeta</string>
+    <string name="favourite_folder_new">Nueva carpeta…</string>
+    <string name="folder_name">Nombre de la carpeta</string>
+    <string name="folder_edit">Editar carpeta</string>
+    <string name="folder_fold">plegar la carpeta</string>
+    <string name="folder_unfold">abrir la carpeta</string>
+    <string name="connect_show">Abrir el panel de conexión</string>
+    <string name="connect_hide">Plegar el panel de conexión</string>
+    <string name="community_tab">Comunidad</string>
+    <string name="community_desc">Servidores públicos gestionados por TeamSpeak. Toca uno para entrar.</string>
+    <string name="community_desc_no_nick">Servidores públicos gestionados por TeamSpeak. Escribe un apodo arriba para entrar en uno.</string>
+    <string name="community_worldwide">Mundial</string>
+    <string name="community_eu_east">Europa del Este</string>
+    <string name="community_emea">Europa, Oriente Medio y África</string>
+    <string name="community_apac">Asia-Pacífico</string>
+    <string name="community_latam">Latinoamérica</string>
+    <string name="community_na">Norteamérica</string>
+    <string name="favourite_channel">Canal al que entrar</string>
+    <string name="favourite_channel_hint">El canal predeterminado del servidor</string>
+    <string name="favourite_channel_desc">El nombre del canal, escrito como lo muestra el servidor. Para un canal dentro de otro, escribe la ruta: Juegos/Lobby.</string>
+    <string name="channel_not_joined">No se pudo entrar en %1$s: ese canal no existe o su contraseña es incorrecta. Estás en el canal predeterminado del servidor.</string>
     <string name="update_title">Ya está disponible AlfredTS %1$s</string>
     <string name="update_text">Hay una versión más nueva que esta (%1$s) en GitHub.</string>
     <string name="not_now">Ahora no</string>
@@ -229,6 +249,13 @@
     <string name="playback_play_sound">Reproducir un sonido</string>
     <string name="playback_call_volume">Con la cancelación de eco activada, las voces siguen el volumen de llamada: pulsa un botón de volumen mientras estás conectado.</string>
     <string name="playback_media_volume">Las voces siguen el volumen multimedia.</string>
+    <string name="playback_output">Las voces suenan por</string>
+    <string name="playback_output_speaker">Altavoz</string>
+    <string name="playback_output_earpiece">Auricular</string>
+    <string name="playback_output_speaker_desc">Las voces suenan por el altavoz del teléfono, así que no hace falta sostenerlo.</string>
+    <string name="playback_output_earpiece_desc">Como en una llamada: acerca el teléfono al oído. La pantalla se apaga ahí.</string>
+    <string name="playback_headset">Usar los auriculares conectados</string>
+    <string name="playback_headset_desc">Unos auriculares o un altavoz Bluetooth conectados reproducen las voces. Desactivado: las reproduce siempre el propio teléfono.</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">Volumen del micrófono</string>
@@ -244,9 +271,11 @@
     <string name="capture_vad_delay">Retardo antes de desactivar</string>
     <string name="capture_processing">Procesamiento de señal</string>
     <string name="capture_noise">Eliminar el ruido de fondo</string>
-    <string name="capture_echo">Cancelación de eco</string>
+    <string name="capture_echo">Cancelación de eco (modo llamada)</string>
     <string name="capture_agc">Control automático de ganancia</string>
-    <string name="capture_echo_desc">La cancelación de eco reproduce las voces como en una llamada (altavoz o tus auriculares con micrófono). Desactívala para el mejor sonido con auriculares.</string>
+    <string name="capture_echo_desc">Las voces suenan como en una llamada: por tus auriculares con micrófono o, si no, por el altavoz del teléfono. Un altavoz Bluetooth sin micrófono no se usa, y los auriculares Bluetooth pasan a su sonido de llamada, también para otras apps. Desactívala para el mejor sonido y para altavoces Bluetooth, y usa auriculares o Pulsar para hablar para que el micrófono no capte el altavoz.</string>
+    <string name="capture_echo_earpiece">Activada mientras las voces suenan por el auricular (Reproducción): el auricular solo funciona en modo llamada, que tiene cancelación de eco.</string>
+    <string name="echo_refused">Este teléfono no puede reproducir voces con cancelación de eco por el altavoz, así que la cancelación de eco está desactivada. Pulsar para hablar o unos auriculares evitan el eco.</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">Mostrar funciones de administración</string>
@@ -592,6 +621,11 @@
     <string name="capture_ai_noise">Eliminación de ruido con IA (RNNoise)</string>
     <string name="capture_ai_noise_desc">También elimina los clics del teclado, un ventilador, la televisión y otros ruidos que la eliminación del propio teléfono deja pasar, con una pequeña red neuronal en el teléfono. Usa un poco más de batería.</string>
     <string name="capture_ai_noise_license">Licencia de RNNoise</string>
+    <string name="share_torch_on">Linterna encendida (toca para apagar)</string>
+    <string name="share_torch_off">Linterna: ilumina lo que graba la cámara trasera</string>
+    <string name="share_camera_lost">La cámara se detuvo: la tomó una llamada, otra aplicación o el teléfono.</string>
+    <string name="share_preview_small">Hacer pequeña la vista previa</string>
+    <string name="share_lens_switch">Objetivo %1$s: toca para el siguiente objetivo</string>
     <string name="debug_log_title">Registro de depuración</string>
     <string name="debug_log">Guardar un registro de depuración</string>
     <string name="debug_log_desc">Para informes de errores: lo que hace la aplicación, incluidos los cierres inesperados, guardado solo en este teléfono. Se quitan las direcciones de servidor, los nombres y los mensajes. La aplicación nunca lo envía: compártelo tú, por ejemplo en un informe de error en GitHub. Desactivarlo lo borra.</string>
@@ -599,4 +633,22 @@
     <string name="debug_log_delete">Borrar registro</string>
     <string name="debug_log_empty">El registro de depuración está vacío por ahora.</string>
     <string name="debug_log_deleted">Registro de depuración borrado.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">Activado</string>
+    <string name="a11y_off">Desactivado</string>
+    <string name="a11y_about">Acerca de %1$s</string>
+    <string name="a11y_talk_start">empezar a hablar</string>
+    <string name="a11y_talk_stop">dejar de hablar</string>
+    <string name="a11y_whisper_start">empezar a susurrar</string>
+    <string name="a11y_whisper_stop">dejar de susurrar</string>
+    <string name="a11y_talking">Hablando</string>
+    <string name="a11y_whispering">Susurrando</string>
+    <string name="a11y_unread">Mensajes sin leer</string>
+    <string name="a11y_move_up">Subir</string>
+    <string name="a11y_move_down">Bajar</string>
+    <string name="a11y_show_controls">mostrar los botones</string>
+    <string name="a11y_hide_controls">ocultar los botones</string>
+    <string name="a11y_preview_bigger">agrandar la vista previa</string>
+    <string name="a11y_preview_smaller">reducir la vista previa</string>
 </resources>

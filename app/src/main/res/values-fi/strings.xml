@@ -32,7 +32,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">Suosikit</string>
-    <string name="connect_title">Yhdistä palvelimeen</string>
     <string name="favourites_in">Suosikeissa</string>
     <string name="favourites_save">Tallenna suosikkeihin</string>
     <string name="favourite_edit">Muokkaa suosikkia</string>
@@ -43,6 +42,27 @@
     <string name="favourite_file_port">Tiedonsiirron portti</string>
     <string name="favourite_file_port_hint">Palvelimen oma (yleensä 30033)</string>
     <string name="favourite_file_port_desc">Vain jos palvelimen kuvat ja profiilikuvat eivät lataudu: sen tiedonsiirto on toisessa portissa.</string>
+    <string name="favourite_folder">Kansio</string>
+    <string name="favourite_folder_new">Uusi kansio…</string>
+    <string name="folder_name">Kansion nimi</string>
+    <string name="folder_edit">Muokkaa kansiota</string>
+    <string name="folder_fold">sulje kansio</string>
+    <string name="folder_unfold">avaa kansio</string>
+    <string name="connect_show">Avaa yhdistämispaneeli</string>
+    <string name="connect_hide">Sulje yhdistämispaneeli</string>
+    <string name="community_tab">Yhteisö</string>
+    <string name="community_desc">TeamSpeakin ylläpitämiä julkisia palvelimia. Liity napauttamalla.</string>
+    <string name="community_desc_no_nick">TeamSpeakin ylläpitämiä julkisia palvelimia. Kirjoita nimimerkki yllä, niin voit liittyä.</string>
+    <string name="community_worldwide">Maailmanlaajuinen</string>
+    <string name="community_eu_east">Itä-Eurooppa</string>
+    <string name="community_emea">Eurooppa, Lähi-itä ja Afrikka</string>
+    <string name="community_apac">Aasia ja Tyynenmeren alue</string>
+    <string name="community_latam">Latinalainen Amerikka</string>
+    <string name="community_na">Pohjois-Amerikka</string>
+    <string name="favourite_channel">Kanava, jolle liitytään</string>
+    <string name="favourite_channel_hint">Palvelimen oletuskanava</string>
+    <string name="favourite_channel_desc">Kanavan nimi kirjoitettuna kuten palvelin sen näyttää. Toisen kanavan sisällä olevalle anna polku: Pelit/Aula.</string>
+    <string name="channel_not_joined">Kanavalle %1$s ei päästy: sellaista kanavaa ei ole tai sen salasana on väärä. Olet palvelimen oletuskanavalla.</string>
     <string name="update_title">AlfredTS %1$s on julkaistu</string>
     <string name="update_text">Tätä (%1$s) uudempi versio on GitHubissa.</string>
     <string name="not_now">Ei nyt</string>
@@ -226,6 +246,13 @@
     <string name="playback_play_sound">Toista ääni</string>
     <string name="playback_call_volume">Kun kaiunpoisto on päällä, äänet seuraavat puhelun äänenvoimakkuutta: paina äänenvoimakkuuspainiketta yhdistettynä.</string>
     <string name="playback_media_volume">Äänet seuraavat median äänenvoimakkuutta.</string>
+    <string name="playback_output">Äänet kuuluvat</string>
+    <string name="playback_output_speaker">Kaiuttimesta</string>
+    <string name="playback_output_earpiece">Kuulokkeesta</string>
+    <string name="playback_output_speaker_desc">Äänet kuuluvat puhelimen kaiuttimesta, joten puhelinta ei tarvitse pitää korvalla.</string>
+    <string name="playback_output_earpiece_desc">Kuten puhelussa: pidä puhelinta korvalla. Näyttö sammuu siksi aikaa.</string>
+    <string name="playback_headset">Käytä yhdistettyjä kuulokkeita</string>
+    <string name="playback_headset_desc">Yhdistetyt kuulokkeet, kuulokemikrofoni tai Bluetooth-kaiutin toistavat äänet. Pois päältä: äänet kuuluvat aina puhelimesta.</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">Mikrofonin äänenvoimakkuus</string>
@@ -241,9 +268,11 @@
     <string name="capture_vad_delay">Viive ennen katkaisua</string>
     <string name="capture_processing">Signaalinkäsittely</string>
     <string name="capture_noise">Poista taustamelu</string>
-    <string name="capture_echo">Kaiunpoisto</string>
+    <string name="capture_echo">Kaiunpoisto (puhelutila)</string>
     <string name="capture_agc">Automaattinen vahvistuksen säätö</string>
-    <string name="capture_echo_desc">Kaiunpoisto toistaa äänet kuin puhelussa (kaiuttimesta tai kuulokemikrofonista). Kytke se pois, niin saat parhaan äänen kuulokkeilla.</string>
+    <string name="capture_echo_desc">Äänet toistetaan kuin puhelussa: kuulokemikrofonista tai muuten puhelimen kaiuttimesta. Bluetooth-kaiutinta, jossa ei ole mikrofonia, ei käytetä, ja Bluetooth-kuulokkeet vaihtavat puheluääneen myös muissa sovelluksissa. Kytke se pois parhaan äänen ja Bluetooth-kaiuttimen takia, ja käytä kuulokkeita tai Paina puhuaksesi -tilaa, ettei mikrofoni poimi kaiuttimen ääntä.</string>
+    <string name="capture_echo_earpiece">Päällä, kun äänet kuuluvat kuulokkeesta (Toisto): puhelimen kuuloke toimii vain puhelutilassa, jossa on kaiunpoisto.</string>
+    <string name="echo_refused">Tämä puhelin ei voi toistaa kaiunpoistettuja ääniä kaiuttimesta, joten kaiunpoisto on pois päältä. Paina puhuaksesi -tila tai kuulokkeet estävät kaiun.</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">Näytä ylläpitotoiminnot</string>
@@ -578,6 +607,11 @@
     <string name="capture_ai_noise">Tekoälyn kohinanpoisto (RNNoise)</string>
     <string name="capture_ai_noise_desc">Poistaa myös näppäimistön naksutukset, tuulettimen, television ja muun melun, jonka puhelimen oma kohinanpoisto päästää läpi, puhelimessa toimivalla pienellä neuroverkolla. Kuluttaa hieman enemmän akkua.</string>
     <string name="capture_ai_noise_license">RNNoisen lisenssi</string>
+    <string name="share_torch_on">Taskulamppu päällä (napauta: pois)</string>
+    <string name="share_torch_off">Taskulamppu: valaisee sen, mitä takakamera kuvaa</string>
+    <string name="share_camera_lost">Kamera pysähtyi: puhelu, toinen sovellus tai puhelin otti sen käyttöönsä.</string>
+    <string name="share_preview_small">Pienennä esikatselu</string>
+    <string name="share_lens_switch">Objektiivi %1$s: napauta seuraavaan objektiiviin</string>
     <string name="debug_log_title">Vianetsintäloki</string>
     <string name="debug_log">Pidä vianetsintälokia</string>
     <string name="debug_log_desc">Vikailmoituksia varten: mitä sovellus tekee, kaatumiset mukaan lukien, vain tässä puhelimessa. Palvelinosoitteet, nimet ja viestit poistetaan. Sovellus ei koskaan lähetä sitä: jaa se itse, esimerkiksi vikailmoitukseen GitHubissa. Pois kytkeminen poistaa sen.</string>
@@ -585,4 +619,22 @@
     <string name="debug_log_delete">Poista loki</string>
     <string name="debug_log_empty">Vianetsintäloki on vielä tyhjä.</string>
     <string name="debug_log_deleted">Vianetsintäloki poistettu.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">Päällä</string>
+    <string name="a11y_off">Pois</string>
+    <string name="a11y_about">Tietoja: %1$s</string>
+    <string name="a11y_talk_start">aloita puhuminen</string>
+    <string name="a11y_talk_stop">lopeta puhuminen</string>
+    <string name="a11y_whisper_start">aloita kuiskaus</string>
+    <string name="a11y_whisper_stop">lopeta kuiskaus</string>
+    <string name="a11y_talking">Puhuu</string>
+    <string name="a11y_whispering">Kuiskaa</string>
+    <string name="a11y_unread">Lukemattomia viestejä</string>
+    <string name="a11y_move_up">Siirrä ylös</string>
+    <string name="a11y_move_down">Siirrä alas</string>
+    <string name="a11y_show_controls">näytä painikkeet</string>
+    <string name="a11y_hide_controls">piilota painikkeet</string>
+    <string name="a11y_preview_bigger">suurenna esikatselu</string>
+    <string name="a11y_preview_smaller">pienennä esikatselu</string>
 </resources>

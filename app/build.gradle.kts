@@ -20,8 +20,8 @@ android {
         applicationId = "io.github.chochrunius.alfredts"
         minSdk = 29
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.6.1"
+        versionCode = 9
+        versionName = "1.7.0"
         // Phones (WebRTC's native code is large; these two cover practically every phone)
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
         // The name under the app's icon; debug builds are labelled separately.
@@ -46,7 +46,8 @@ android {
     externalNativeBuild {
         cmake {
             path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.31.6"
+            // One that GitHub's runners have in their Android SDK, so the code scan (CodeQL) can build the app
+            version = "3.31.5"
             // Next to the rest of the build (scripts/dev.sh), not in the source folder
             System.getenv("POCKETTS_BUILD_ROOT")?.takeIf { it.isNotEmpty() }?.let { buildStagingDirectory = file("$it/cxx") }
         }

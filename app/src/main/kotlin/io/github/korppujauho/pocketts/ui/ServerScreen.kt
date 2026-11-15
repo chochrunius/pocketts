@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -39,6 +42,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -122,6 +129,14 @@ interface ServerActions {
     /** The warning on screen was closed. */
     fun dismissError() {}
     fun setRotateLock(on: Boolean) {}
+    /** The shared back camera's flashlight. */
+    fun setTorch(on: Boolean) {}
+    /** The shared camera's zoom. */
+    fun setZoom(zoom: Float) {}
+    /** The next back lens of the shared camera. */
+    fun nextLens() {}
+    /** Focus on a spot of the shared camera's picture (0 - 1 across it, as the camera gives it). */
+    fun focusAt(x: Float, y: Float) {}
     fun setWatchMuted(muted: Boolean) {}
     fun setWatchVolume(volume: Float) {}
     /** The stream player as a small window over other apps. */
@@ -147,6 +162,8 @@ fun ServerScreen(
     egl: org.webrtc.EglBase? = null,
     canBoth: Boolean = false, // the phone can use both cameras at once
     pip: Boolean = false, // the app is a small picture-in-picture window: the stream player is drawn there instead
+    // Who is talking (Session.voices): passed as it is and read only where it's shown, so talking doesn't redraw the screen
+    voices: androidx.compose.runtime.State<Session.Voices> = remember { mutableStateOf(Session.Voices()) },
 ) {
     var shareDialog by remember { mutableStateOf(false) }
     var serversMenu by remember { mutableStateOf(false) }
@@ -206,6 +223,8 @@ fun ServerScreen(
     }
     // The ring light: sharing the front camera, the screen at full brightness with a white frame lights your face
     var ringLight by rememberSaveable { mutableStateOf(false) }
+    // Off when a share ends: a new one starts without it, as the flashlight does
+    LaunchedEffect(state.stream.sharing == null) { if (state.stream.sharing == null) ringLight = false }
     val frontCamera = state.stream.sharing == io.github.korppujauho.pocketts.proto.Streams.Kind.CAMERA && state.stream.shareFront && !state.stream.shareBoth
     val lightOn = ringLight && frontCamera
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -225,8 +244,7 @@ fun ServerScreen(
         }
         Column(Modifier.fillMaxSize()) {
             AppHeader {
-                ExitButton(stringResource(R.string.disconnect)) { actions.disconnect() }
-                androidx.compose.foundation.layout.Spacer(Modifier.size(14.dp)) // so the star isn't Disconnect by mistake
+                HeaderButton(androidx.compose.material.icons.Icons.AutoMirrored.Filled.Logout, stringResource(R.string.disconnect), tint = Ts.red) { actions.disconnect() }
                 // WebTS's menu: the favourites (one tap switches), and adding the server you're on
                 androidx.compose.foundation.layout.Box {
                     HeaderButton(androidx.compose.material.icons.Icons.Filled.Star, stringResource(R.string.servers)) { serversMenu = true }
@@ -235,19 +253,44 @@ fun ServerScreen(
                         shape = RoundedCornerShape(16.dp), containerColor = Pop.top, shadowElevation = 12.dp,
                         border = androidx.compose.foundation.BorderStroke(1.dp, Pop.edge),
                     ) {
-                        for (f in favorites) {
-                            val here = io.github.korppujauho.pocketts.Favorites.same(f.address, state.address)
-                            androidx.compose.material3.DropdownMenuItem(
-                                text = { Text(f.label, color = Ts.text) },
-                                leadingIcon = {
-                                    androidx.compose.material3.Icon(
-                                        if (here) androidx.compose.material.icons.Icons.Filled.CheckCircle else androidx.compose.material.icons.Icons.Filled.Star,
-                                        contentDescription = if (here) stringResource(R.string.connected) else null, tint = if (here) Ts.green else Ts.muted,
-                                    )
-                                },
-                                enabled = !here,
-                                onClick = { serversMenu = false; actions.switchTo(f) },
-                            )
+                        // By folder, in the connect screen's look: each folder a panel under its name, each favourite a
+                        // row in it (the one we're on is marked, and isn't to be tapped)
+                        for ((folder, inFolder) in io.github.korppujauho.pocketts.Favorites.byFolder(favorites)) {
+                            Column(
+                                Modifier.padding(horizontal = 10.dp, vertical = 5.dp).width(264.dp).clip(RoundedCornerShape(10.dp))
+                                    .background(Ts.panel).border(1.dp, Ts.hairline, RoundedCornerShape(10.dp)),
+                            ) {
+                                Text(
+                                    folderName(folder), color = Ts.title, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.fillMaxWidth().background(Ts.card).padding(horizontal = 12.dp, vertical = 8.dp),
+                                )
+                                Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0xFF111214)))
+                                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    for (f in inFolder) {
+                                        val here = io.github.korppujauho.pocketts.Favorites.same(f.address, state.address)
+                                        Row(
+                                            Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Ts.card)
+                                                .border(1.dp, if (here) Ts.green.copy(alpha = 0.6f) else Color(0x1FFFFFFF), RoundedCornerShape(8.dp))
+                                                .clickable(enabled = !here, role = androidx.compose.ui.semantics.Role.Button) {
+                                                    serversMenu = false
+                                                    actions.switchTo(f)
+                                                }
+                                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                f.label, color = Ts.text, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
+                                            )
+                                            if (here) androidx.compose.material3.Icon(
+                                                androidx.compose.material.icons.Icons.Filled.CheckCircle,
+                                                contentDescription = stringResource(R.string.connected), tint = Ts.green, modifier = Modifier.size(18.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         if (favorites.none { io.github.korppujauho.pocketts.Favorites.same(it.address, state.address) }) {
                             androidx.compose.material3.DropdownMenuItem(
@@ -259,7 +302,8 @@ fun ServerScreen(
                                     serversMenu = false
                                     val channels = io.github.korppujauho.pocketts.ChannelPreferences(context).load(state.address)
                                     addingFavorite = io.github.korppujauho.pocketts.Favorite(state.address, state.serverName, nickname,
-                                        rememberChannel = channels.remember, defaultChannel = channels.defaultChannel)
+                                        rememberChannel = channels.remember, defaultChannel = channels.defaultChannel,
+                                        folder = favorites.firstOrNull()?.folder.orEmpty())
                                 },
                             )
                         }                    }
@@ -284,7 +328,7 @@ fun ServerScreen(
                             whisper = if (state.whisperTo.isEmpty) null else ({ WhisperButton(state.whisperHeld, actions::setWhisper) }),
                         )
                         WhisperStrip(
-                            incoming = state.whispering.filter { it != state.ownId }.mapNotNull { state.client(it)?.nickname },
+                            incoming = { voices.value.whispering.filter { it != state.ownId }.mapNotNull { state.client(it)?.nickname } },
                             list = state.whisperTo.people.mapNotNull { state.client(it)?.nickname } +
                                 state.whisperTo.channels.mapNotNull { id -> state.channel(id)?.let { it.displayName.ifEmpty { it.name } } },
                             onList = { whisperList = true }, onClear = actions::clearWhisper,
@@ -296,6 +340,8 @@ fun ServerScreen(
                     ShareBar(
                         state.stream, egl, actions::flipCamera, actions::stopShare, actions::setRotateLock, screenTurn = screenTurn,
                         light = if (frontCamera) ringLight else null, onLight = { ringLight = it },
+                        torch = if (state.stream.shareFlash && !frontCamera) state.stream.torch else null, onTorch = actions::setTorch,
+                        onZoom = actions::setZoom, onFocus = actions::focusAt, onLens = actions::nextLens,
                     )
                 }
                 if (state.stream.watching != 0 && egl != null && !pip) {
@@ -366,7 +412,7 @@ fun ServerScreen(
                                     listState = channelListState, initialPosition = initialChannelPosition,
                                     connected = state.phase == Session.Phase.CONNECTED,
                                     animated = state.voice.animateInitialChannel,
-                                    ctx = TreeContext(state.ownId, state.ownChannel, state.talking, state.serverKey, state.badges, actions::watch, whispering = state.whispering) { it.id !in state.cannotTalk },
+                                    ctx = TreeContext(state.ownId, state.ownChannel, voices, state.serverKey, state.badges, actions::watch) { it.id !in state.cannotTalk },
                                     onChannel = { ch ->
                                         if (ch.id == state.ownChannel) return@ChannelTree
                                         // A spacer is a channel too (some servers' AFK channel), but easily tapped by mistake: only when allowed
@@ -498,7 +544,10 @@ fun ServerScreen(
         BanDialog(p, onBan = { seconds, reason -> actions.ban(p, seconds, reason); banTarget = null }, onDismiss = { banTarget = null })
     }
     addingFavorite?.let { f ->
-        FavoriteDialog(f, onSave = { actions.addFavorite(it); addingFavorite = null }, onDelete = null) { addingFavorite = null }
+        FavoriteDialog(
+            f, onSave = { actions.addFavorite(it); addingFavorite = null }, onDelete = null,
+            folders = io.github.korppujauho.pocketts.Favorites.byFolder(favorites).map { it.first }.ifEmpty { listOf("") },
+        ) { addingFavorite = null }
     }
     pokeTarget?.let { p ->
         PokeDialog(p, onSend = { actions.poke(p, it); pokeTarget = null }, onDismiss = { pokeTarget = null })
@@ -597,9 +646,12 @@ private fun ViewSwitch(view: View, unread: Boolean, onView: (View) -> Unit) {
     ) {
         for ((v, label) in listOf(View.CHANNELS to stringResource(R.string.view_channels), View.CHAT to stringResource(R.string.chat))) {
             val active = v == view
+            val unreadLabel = if (v == View.CHAT && unread && !active) stringResource(R.string.a11y_unread) else null
             Row(
                 Modifier.weight(1f).clip(RoundedCornerShape(7.dp)).background(if (active) Color(0x12FFFFFF) else Color.Transparent)
-                    .clickable { onView(v) }.padding(vertical = 8.dp),
+                    .selectable(selected = active, role = androidx.compose.ui.semantics.Role.Tab) { onView(v) }
+                    .then(if (unreadLabel != null) Modifier.semantics { stateDescription = unreadLabel } else Modifier)
+                    .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {

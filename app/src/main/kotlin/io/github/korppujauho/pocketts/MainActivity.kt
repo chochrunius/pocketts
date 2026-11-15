@@ -179,6 +179,13 @@ class MainActivity : ComponentActivity() {
             if (!info.isInPictureInPictureMode && lifecycle.currentState == androidx.lifecycle.Lifecycle.State.CREATED) Session.stopWatching()
         }
         setContent { PocketTsTheme { App() } }
+        // How long a start took, from the app's process starting to the first screen drawn (only a fresh start: the
+        // process's own): to see what the baseline profile and later changes do
+        if (savedInstanceState == null && !startLogged) {
+            startLogged = true
+            val began = android.os.Process.getStartUptimeMillis()
+            window.decorView.post { AppLog.log("Started in ${android.os.SystemClock.uptimeMillis() - began} ms") }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -211,6 +218,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         var current: MainActivity? = null
+        private var startLogged = false // the start time is logged once a process
     }
 }
 
@@ -270,6 +278,7 @@ private val favorites = kotlinx.coroutines.flow.MutableStateFlow<List<Favorite>>
 @Composable
 private fun App() {
     val state by Session.state.collectAsState()
+    val voices = Session.voices.collectAsState() // handed on as it is: only the talking indicators read it
     val favs by favorites.collectAsState()
     val ctx = LocalContext.current
     val settings = remember { Settings(ctx) }
@@ -291,13 +300,13 @@ private fun App() {
         androidx.compose.foundation.layout.Box {
             ServerScreen(
                 state, SessionActions, AppSettingsActions(ctx), settings.nickname, favorites = favs, egl = egl,
-                canBoth = canBoth, pip = pip,
+                canBoth = canBoth, pip = pip, voices = voices,
             )
             if (pip) io.github.korppujauho.pocketts.ui.PipPlayer(state.stream, egl)
         }
     }
     pendingLink.value?.let { link ->
-        val nickname = settings.nickname.ifBlank { link.nickname }.ifBlank { "PocketTS user" }
+        val nickname = settings.nickname.ifBlank { link.nickname }.ifBlank { "AlfredTS user" }
         io.github.korppujauho.pocketts.ui.LinkDialog(
             link, nickname,
             leaving = if (state.phase != Session.Phase.IDLE) state.serverName.ifEmpty { state.address } else null,
@@ -319,28 +328,46 @@ private fun App() {
 private fun connect(
     context: Context, address: String, nickname: String, password: String, filePort: Int? = null,
     channel: String = "", channelPassword: String = "", privilegeKey: String = "",
+    channelId: Int = 0, onChannel: ((Int, String) -> Unit)? = null,
 ) {
     Settings(context).let {
         it.nickname = nickname
         it.address = address
     }
     MainActivity.current?.ensureMic()
-    val link = JoinLink.parse(address)
-    Session.connect(context, link?.address ?: address, nickname, password, filePort,
-        channel.ifBlank { link?.channel.orEmpty() }, channelPassword.ifBlank { link?.channelPassword.orEmpty() }, privilegeKey)
+    Session.connect(context, address, nickname, password, filePort, channel, channelPassword, privilegeKey, channelId, onChannel)
 }
 
 private fun connectFavorite(context: Context, f: Favorite) {
     val store = ChannelPreferences(context)
     store.save(f.address, store.load(f.address).copy(remember = f.rememberChannel, defaultChannel = f.defaultChannel))
-    connect(context, f.address, f.nickname.ifBlank { Settings(context).nickname }, f.password, f.filePort)
+    // 1.6.1 could store a pasted ts3server:// link as a favourite address.
+    val link = JoinLink.parse(f.address)
+    val learned: ((Int, String) -> Unit)? = if (f.channel.isBlank()) null else { id, path ->
+        // Where its channel is now (learned on the first visit, or renamed since): remembered in the favourite
+        val ctx = context.applicationContext
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            val list = favorites.value
+            val matches = list.withIndex().filter { (_, current) ->
+                Favorites.same(current.address, f.address) && current.name == f.name &&
+                    current.folder == f.folder && current.channel == f.channel && current.channelId == f.channelId
+            }
+            val at = matches.singleOrNull()?.index ?: return@post
+            saveFavorites(ctx, list.mapIndexed { i, current ->
+                if (i == at) current.copy(channel = path, channelId = id) else current
+            })
+        }
+    }
+    connect(context, link?.address ?: f.address, f.nickname.ifBlank { Settings(context).nickname },
+        f.password, f.filePort, channel = f.channel.ifBlank { link?.channel.orEmpty() },
+        channelPassword = if (f.channel.isBlank()) link?.channelPassword.orEmpty() else f.channelPassword,
+        channelId = f.channelId, onChannel = learned)
 }
 
-private fun saveFavorites(context: Context, list: List<Favorite>) {
-    Favorites.save(context, list)
-    val channels = ChannelPreferences(context)
-    list.forEach { f -> channels.save(f.address, channels.load(f.address).copy(remember = f.rememberChannel, defaultChannel = f.defaultChannel)) }
+private fun saveFavorites(context: Context, list: List<Favorite>): Boolean {
+    if (!Favorites.save(context, list)) return false
     favorites.value = Favorites.load(context)
+    return true
 }
 
 @Composable
@@ -350,30 +377,58 @@ private fun Connect(state: Session.UiState, favs: List<Favorite>) {
     ConnectScreen(
         settings.nickname, settings.address, settings.serverPassword, favs, state.error,
         actions = object : ConnectActions {
-            override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean, rememberChannel: Boolean, defaultChannel: String) {
-                val store = ChannelPreferences(ctx)
-                store.save(address, store.load(address).copy(remember = rememberChannel, defaultChannel = defaultChannel))
+            override fun connect(address: String, nickname: String, password: String, remember: Boolean, favorite: Boolean, channels: ChannelPreference?) {
                 // A teamspeak:// or tmspk.gg link pasted in: as when it's opened (an invite is looked up, then asked
-                // about). A ts3server:// one connects as before.
-                if (JoinLink.isLink(address) && !address.trim().startsWith("ts3server://", ignoreCase = true)) {
+                // about). A ts3server:// one connects straight away, with its channel and passwords; one with a
+                // privilege key is asked about first, as when it's opened.
+                val ts3 = address.trim().startsWith("ts3server://", ignoreCase = true)
+                val link = if (ts3) JoinLink.parse(address) else null
+                if (JoinLink.isLink(address) && (!ts3 || link == null || link.token.isNotEmpty())) {
                     settings.nickname = nickname
                     openLinkText(ctx, address)
                     return
                 }
-                if (favs.any { Favorites.same(it.address, address) }) saveFavorites(ctx, favs.map {
-                    if (Favorites.same(it.address, address)) it.copy(rememberChannel = rememberChannel, defaultChannel = defaultChannel) else it
-                })
-                settings.serverPassword = if (remember) password else ""
-                if (favorite) saveFavorites(ctx, favs + Favorite(address, password = if (remember) password else "", rememberChannel = rememberChannel, defaultChannel = defaultChannel))
-                connect(ctx, address, nickname, password)
+                // Only the server is kept as the address: the link can hold passwords, which go where passwords do
+                val server = link?.address ?: address
+                val pw = password.ifEmpty { link?.password.orEmpty() }
+                settings.serverPassword = if (remember) pw else ""
+                if (channels != null) {
+                    val store = ChannelPreferences(ctx)
+                    store.save(server, store.load(server).copy(remember = channels.remember, defaultChannel = channels.defaultChannel))
+                    val updated = favs.map {
+                        if (Favorites.same(it.address, server)) it.copy(rememberChannel = channels.remember,
+                            defaultChannel = channels.defaultChannel) else it
+                    }
+                    if (updated != favs) saveFavorites(ctx, updated)
+                }
+                // A new favourite goes into the first folder.
+                if (favorite) saveFavorites(ctx, favs + Favorite(server, password = if (remember) pw else "",
+                    folder = favs.firstOrNull()?.folder.orEmpty(), rememberChannel = channels?.remember ?: false,
+                    defaultChannel = channels?.defaultChannel.orEmpty()))
+                connect(ctx, server, nickname, pw, channel = link?.channel.orEmpty(), channelPassword = link?.channelPassword.orEmpty())
             }
             override fun connectFavorite(f: Favorite) = connectFavorite(ctx, f)
-            override fun saveFavorite(old: Favorite?, new: Favorite) =
-                saveFavorites(ctx, favs.map { if (it == old) new else if (new.auto) it.copy(auto = false) else it })
-            override fun removeFavorite(f: Favorite) = saveFavorites(ctx, favs - f)
-            override fun toggleAuto(f: Favorite) = saveFavorites(ctx, favs.map { it.copy(auto = if (it == f) !f.auto else false) })
+            override fun saveFavorite(old: Favorite?, new: Favorite) {
+                if (saveFavorites(ctx, if (old == null) favs + new else Favorites.edited(favs, old, new)) &&
+                    (old == null || old.address != new.address || old.rememberChannel != new.rememberChannel ||
+                        old.defaultChannel != new.defaultChannel)
+                ) {
+                    val store = ChannelPreferences(ctx)
+                    store.save(new.address, store.load(new.address).copy(remember = new.rememberChannel, defaultChannel = new.defaultChannel))
+                }
+            }
+            override fun removeFavorite(f: Favorite) { saveFavorites(ctx, favs - f) }
+            override fun toggleAuto(f: Favorite) { saveFavorites(ctx, favs.map { it.copy(auto = if (it == f) !f.auto else false) }) }
+            override fun renameFolder(folder: String, name: String) { saveFavorites(ctx, Favorites.renamed(favs, folder, name)) }
+            override fun moveFavorite(f: Favorite, folder: String, to: Int) { saveFavorites(ctx, Favorites.moved(favs, f, folder, to)) }
+            override fun moveFolder(folder: String, up: Boolean) { saveFavorites(ctx, Favorites.folderMoved(favs, folder, up)) }
+            override fun setFolded(folders: Set<String>) = Favorites.setFolded(ctx, folders)
+            override fun setConnectHidden(hidden: Boolean) {
+                settings.connectHidden = hidden
+            }
         },
         voice = state.voice, settingsActions = AppSettingsActions(ctx), onDismissError = Session::clearError,
+        folded = remember { Favorites.folded(ctx) }, connectHidden = remember { settings.connectHidden },
     )
 }
 
@@ -462,6 +517,18 @@ private object SessionActions : ServerActions {
         MainActivity.current?.shareBothCameras(quality, sound)
     }
     override fun setRotateLock(on: Boolean) = Session.setRotateLock(on)
+    override fun setTorch(on: Boolean) {
+        Session.setTorch(on)
+    }
+    override fun setZoom(zoom: Float) {
+        Session.setZoom(zoom)
+    }
+    override fun nextLens() {
+        Session.nextLens()
+    }
+    override fun focusAt(x: Float, y: Float) {
+        Session.focusAt(x, y)
+    }
     override fun setWatchMuted(muted: Boolean) {
         Session.setWatchMuted(muted)
     }
@@ -478,7 +545,9 @@ private object SessionActions : ServerActions {
     }
 }
 
-private class AppSettingsActions(private val context: Context) : SettingsActions {
+private class AppSettingsActions(context: Context) : SettingsActions {
+    private val context = context
+
     override fun save(voice: VoiceSettings, nickname: String) {
         // Turned on: Android's own page to allow it, if not allowed yet
         if (voice.overlayPtt && !Session.state.value.voice.overlayPtt && !TalkOverlay.allowed(context)) {

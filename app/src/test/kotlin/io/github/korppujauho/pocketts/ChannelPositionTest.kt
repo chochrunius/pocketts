@@ -42,7 +42,7 @@ class ChannelPositionTest {
         compose.setContent {
             list = rememberLazyListState()
             PocketTsTheme {
-                ChannelTree(rows, TreeContext(ownId, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(rows, TreeContext(ownId, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp), listState = list, initialPosition = position, connected = connected, animated = false)
             }
         }
@@ -61,7 +61,7 @@ class ChannelPositionTest {
     @Test fun ownClientVisibleInsideOversizedChannel() {
         compose.setContent {
             PocketTsTheme {
-                ChannelTree(tree(crowded = true), TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(tree(crowded = true), TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp), animated = false)
             }
         }
@@ -74,7 +74,7 @@ class ChannelPositionTest {
         compose.setContent {
             list = rememberLazyListState()
             PocketTsTheme {
-                ChannelTree(rows, TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(rows, TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp).testTag("tree"), listState = list, initialPosition = position, animated = false)
             }
         }
@@ -93,7 +93,7 @@ class ChannelPositionTest {
         compose.setContent {
             list = rememberLazyListState()
             PocketTsTheme {
-                ChannelTree(rows, TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(rows, TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp).testTag("tree"), listState = list, initialPosition = position)
             }
         }
@@ -114,7 +114,7 @@ class ChannelPositionTest {
         val position = InitialChannelPosition()
         compose.setContent {
             PocketTsTheme {
-                ChannelTree(tree(), TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(tree(), TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp).testTag("tree"), initialPosition = position)
             }
         }
@@ -130,7 +130,7 @@ class ChannelPositionTest {
         compose.mainClock.autoAdvance = false
         compose.setContent {
             PocketTsTheme {
-                ChannelTree(tree(), TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                ChannelTree(tree(), TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp).testTag("tree"), initialPosition = position)
             }
         }
@@ -148,7 +148,7 @@ class ChannelPositionTest {
         compose.setContent {
             list = rememberLazyListState()
             PocketTsTheme {
-                if (shown) ChannelTree(tree(), TreeContext(99, 40, emptySet(), canTalk = { true }), {}, {},
+                if (shown) ChannelTree(tree(), TreeContext(99, 40, androidx.compose.runtime.mutableStateOf(Session.Voices()), canTalk = { true }), {}, {},
                     Modifier.fillMaxWidth().height(300.dp), listState = list, initialPosition = position)
             }
         }

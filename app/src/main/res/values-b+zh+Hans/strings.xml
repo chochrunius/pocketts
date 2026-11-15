@@ -32,7 +32,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">收藏</string>
-    <string name="connect_title">连接到服务器</string>
     <string name="favourites_in">已收藏</string>
     <string name="favourites_save">保存到收藏</string>
     <string name="favourite_edit">编辑收藏</string>
@@ -43,6 +42,27 @@
     <string name="favourite_file_port">文件传输端口</string>
     <string name="favourite_file_port_hint">服务器自己的端口（通常为 30033）</string>
     <string name="favourite_file_port_desc">仅当服务器的图片和头像无法加载时：它的文件传输使用了其他端口。</string>
+    <string name="favourite_folder">文件夹</string>
+    <string name="favourite_folder_new">新建文件夹…</string>
+    <string name="folder_name">文件夹名称</string>
+    <string name="folder_edit">编辑文件夹</string>
+    <string name="folder_fold">收起文件夹</string>
+    <string name="folder_unfold">展开文件夹</string>
+    <string name="connect_show">展开连接面板</string>
+    <string name="connect_hide">收起连接面板</string>
+    <string name="community_tab">社区</string>
+    <string name="community_desc">由 TeamSpeak 运营的公共服务器。点按即可加入。</string>
+    <string name="community_desc_no_nick">由 TeamSpeak 运营的公共服务器。请先在上方输入昵称再加入。</string>
+    <string name="community_worldwide">全球</string>
+    <string name="community_eu_east">东欧</string>
+    <string name="community_emea">欧洲、中东和非洲</string>
+    <string name="community_apac">亚太</string>
+    <string name="community_latam">拉丁美洲</string>
+    <string name="community_na">北美</string>
+    <string name="favourite_channel">要加入的频道</string>
+    <string name="favourite_channel_hint">服务器的默认频道</string>
+    <string name="favourite_channel_desc">频道名称，需与服务器显示的完全一致。子频道请填写路径：游戏/大厅。</string>
+    <string name="channel_not_joined">无法加入 %1$s：没有这个频道，或其密码错误。你现在在服务器的默认频道。</string>
     <string name="update_title">AlfredTS %1$s 已发布</string>
     <string name="update_text">GitHub 上有比当前版本（%1$s）更新的版本。</string>
     <string name="not_now">以后再说</string>
@@ -223,6 +243,13 @@
     <string name="playback_play_sound">播放提示音</string>
     <string name="playback_call_volume">开启回声消除时，语音跟随通话音量：连接后按音量键即可调节。</string>
     <string name="playback_media_volume">语音跟随媒体音量。</string>
+    <string name="playback_output">语音播放设备</string>
+    <string name="playback_output_speaker">扬声器</string>
+    <string name="playback_output_earpiece">听筒</string>
+    <string name="playback_output_speaker_desc">语音从手机扬声器播放，无需把手机拿在耳边。</string>
+    <string name="playback_output_earpiece_desc">像打电话一样：把手机贴近耳朵，屏幕会自动熄灭。</string>
+    <string name="playback_headset">使用已连接的耳机</string>
+    <string name="playback_headset_desc">连接耳机、耳麦或蓝牙音箱时由它们播放语音。关闭后始终由手机本身播放。</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">麦克风音量</string>
@@ -238,9 +265,11 @@
     <string name="capture_vad_delay">停用前的延迟</string>
     <string name="capture_processing">信号处理</string>
     <string name="capture_noise">消除背景噪音</string>
-    <string name="capture_echo">回声消除</string>
+    <string name="capture_echo">回声消除（通话模式）</string>
     <string name="capture_agc">自动增益控制</string>
-    <string name="capture_echo_desc">回声消除会像通话一样播放语音（扬声器或你的耳麦）。使用耳机时关闭它可获得最佳音质。</string>
+    <string name="capture_echo_desc">语音像通话一样播放：通过你的耳麦，否则通过手机扬声器。没有麦克风的蓝牙音箱不会被使用，蓝牙耳机也会切换为通话音质，其他应用同样如此。关闭它可获得最佳音质并使用蓝牙音箱；此时请使用耳机或按键说话，以免麦克风收录音箱的声音。</string>
+    <string name="capture_echo_earpiece">语音通过听筒播放（播放）时保持开启：听筒只能在通话模式下使用，通话模式带有回声消除。</string>
+    <string name="echo_refused">这部手机无法通过扬声器播放带回声消除的语音，因此回声消除已关闭。使用按键说话或耳机可避免回声。</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">显示管理功能</string>
@@ -564,6 +593,11 @@
     <string name="capture_ai_noise">AI 降噪 (RNNoise)</string>
     <string name="capture_ai_noise_desc">用手机上的小型神经网络，同时去除手机自带降噪漏掉的键盘声、风扇声、电视声等噪音。会多耗一点电。</string>
     <string name="capture_ai_noise_license">RNNoise 许可证</string>
+    <string name="share_torch_on">手电筒已开启（轻触关闭）</string>
+    <string name="share_torch_off">手电筒：照亮后置摄像头拍摄的画面</string>
+    <string name="share_camera_lost">摄像头已停止：被来电、其他应用或手机占用。</string>
+    <string name="share_preview_small">缩小预览</string>
+    <string name="share_lens_switch">镜头 %1$s：轻触切换到下一个镜头</string>
     <string name="debug_log_title">调试日志</string>
     <string name="debug_log">保留调试日志</string>
     <string name="debug_log_desc">用于报告问题：记录应用的运行情况（包括崩溃），只保存在这部手机上。服务器地址、名字和消息都会被去除。应用从不发送它：请自行分享，例如在 GitHub 上提交问题报告时。关闭此项会删除日志。</string>
@@ -571,4 +605,22 @@
     <string name="debug_log_delete">删除日志</string>
     <string name="debug_log_empty">调试日志目前为空。</string>
     <string name="debug_log_deleted">调试日志已删除。</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">开</string>
+    <string name="a11y_off">关</string>
+    <string name="a11y_about">关于“%1$s”</string>
+    <string name="a11y_talk_start">开始说话</string>
+    <string name="a11y_talk_stop">停止说话</string>
+    <string name="a11y_whisper_start">开始说悄悄话</string>
+    <string name="a11y_whisper_stop">停止说悄悄话</string>
+    <string name="a11y_talking">正在说话</string>
+    <string name="a11y_whispering">正在说悄悄话</string>
+    <string name="a11y_unread">有未读消息</string>
+    <string name="a11y_move_up">上移</string>
+    <string name="a11y_move_down">下移</string>
+    <string name="a11y_show_controls">显示按钮</string>
+    <string name="a11y_hide_controls">隐藏按钮</string>
+    <string name="a11y_preview_bigger">放大预览</string>
+    <string name="a11y_preview_smaller">缩小预览</string>
 </resources>

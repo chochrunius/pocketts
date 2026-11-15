@@ -32,7 +32,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">Favoriten</string>
-    <string name="connect_title">Mit einem Server verbinden</string>
     <string name="favourites_in">In den Favoriten</string>
     <string name="favourites_save">In Favoriten speichern</string>
     <string name="favourite_edit">Favorit bearbeiten</string>
@@ -43,6 +42,27 @@
     <string name="favourite_file_port">Port für Dateiübertragung</string>
     <string name="favourite_file_port_hint">Der des Servers (meist 30033)</string>
     <string name="favourite_file_port_desc">Nur wenn die Bilder und Avatare des Servers nicht laden: Seine Dateiübertragung läuft über einen anderen Port.</string>
+    <string name="favourite_folder">Ordner</string>
+    <string name="favourite_folder_new">Neuer Ordner…</string>
+    <string name="folder_name">Ordnername</string>
+    <string name="folder_edit">Ordner bearbeiten</string>
+    <string name="folder_fold">Ordner einklappen</string>
+    <string name="folder_unfold">Ordner ausklappen</string>
+    <string name="connect_show">Verbindungsbereich ausklappen</string>
+    <string name="connect_hide">Verbindungsbereich einklappen</string>
+    <string name="community_tab">Community</string>
+    <string name="community_desc">Öffentliche Server, betrieben von TeamSpeak. Tippe auf einen, um beizutreten.</string>
+    <string name="community_desc_no_nick">Öffentliche Server, betrieben von TeamSpeak. Gib oben einen Nickname ein, um beizutreten.</string>
+    <string name="community_worldwide">Weltweit</string>
+    <string name="community_eu_east">Osteuropa</string>
+    <string name="community_emea">Europa, Naher Osten und Afrika</string>
+    <string name="community_apac">Asien-Pazifik</string>
+    <string name="community_latam">Lateinamerika</string>
+    <string name="community_na">Nordamerika</string>
+    <string name="favourite_channel">Kanal beim Verbinden</string>
+    <string name="favourite_channel_hint">Der Standardkanal des Servers</string>
+    <string name="favourite_channel_desc">Der Name des Kanals, so geschrieben, wie der Server ihn zeigt. Für einen Kanal in einem anderen den Pfad angeben: Spiele/Lobby.</string>
+    <string name="channel_not_joined">%1$s konnte nicht betreten werden: Diesen Kanal gibt es nicht, oder sein Passwort ist falsch. Du bist im Standardkanal des Servers.</string>
     <string name="update_title">AlfredTS %1$s ist erschienen</string>
     <string name="update_text">Eine neuere Version als diese (%1$s) gibt es auf GitHub.</string>
     <string name="not_now">Nicht jetzt</string>
@@ -226,6 +246,13 @@
     <string name="playback_play_sound">Ton abspielen</string>
     <string name="playback_call_volume">Mit Echounterdrückung folgen die Stimmen der Anruflautstärke: Drück eine Lautstärketaste, während du verbunden bist.</string>
     <string name="playback_media_volume">Die Stimmen folgen der Medienlautstärke.</string>
+    <string name="playback_output">Stimmen kommen aus</string>
+    <string name="playback_output_speaker">Lautsprecher</string>
+    <string name="playback_output_earpiece">Hörer</string>
+    <string name="playback_output_speaker_desc">Stimmen kommen aus dem Lautsprecher des Telefons, du musst es also nicht halten.</string>
+    <string name="playback_output_earpiece_desc">Wie bei einem Anruf: Halte das Telefon ans Ohr. Der Bildschirm schaltet sich dort aus.</string>
+    <string name="playback_headset">Verbundene Kopfhörer verwenden</string>
+    <string name="playback_headset_desc">Kopfhörer, ein Headset oder ein Bluetooth-Lautsprecher geben die Stimmen wieder, solange sie verbunden sind. Aus: Das Telefon selbst gibt sie immer wieder.</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">Mikrofonlautstärke</string>
@@ -241,9 +268,11 @@
     <string name="capture_vad_delay">Verzögerung vor dem Abschalten</string>
     <string name="capture_processing">Signalverarbeitung</string>
     <string name="capture_noise">Hintergrundgeräusche entfernen</string>
-    <string name="capture_echo">Echounterdrückung</string>
+    <string name="capture_echo">Echounterdrückung (Anrufmodus)</string>
     <string name="capture_agc">Automatische Verstärkungsregelung</string>
-    <string name="capture_echo_desc">Mit Echounterdrückung klingen Stimmen wie in einem Anruf (Lautsprecher oder Headset). Schalte sie für den besten Klang mit Kopfhörern aus.</string>
+    <string name="capture_echo_desc">Stimmen klingen wie in einem Anruf: über dein Headset, sonst über den Lautsprecher des Telefons. Ein Bluetooth-Lautsprecher ohne Mikrofon wird nicht genutzt, und Bluetooth-Kopfhörer wechseln zum Anrufklang, auch für andere Apps. Schalte sie für den besten Klang und für Bluetooth-Lautsprecher aus, und nutze Kopfhörer oder Push-to-Talk, damit das Mikrofon den Lautsprecher nicht aufnimmt.</string>
+    <string name="capture_echo_earpiece">An, solange Stimmen aus dem Hörer kommen (Wiedergabe): Der Hörer funktioniert nur im Anrufmodus, der Echounterdrückung hat.</string>
+    <string name="echo_refused">Dieses Telefon kann Stimmen mit Echounterdrückung nicht über den Lautsprecher wiedergeben, daher ist die Echounterdrückung aus. Push-to-Talk oder Kopfhörer vermeiden Echo.</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">Admin-Funktionen anzeigen</string>
@@ -578,6 +607,11 @@
     <string name="capture_ai_noise">KI-Rauschunterdrückung (RNNoise)</string>
     <string name="capture_ai_noise_desc">Entfernt auch Tastaturklicks, Lüfter, Fernseher und anderen Lärm, den die Rauschunterdrückung des Telefons durchlässt, mit einem kleinen neuronalen Netz auf dem Telefon. Braucht etwas mehr Akku.</string>
     <string name="capture_ai_noise_license">Lizenz von RNNoise</string>
+    <string name="share_torch_on">Taschenlampe an (tippen: aus)</string>
+    <string name="share_torch_off">Taschenlampe: beleuchtet, was die Rückkamera filmt</string>
+    <string name="share_camera_lost">Die Kamera wurde beendet: Ein Anruf, eine andere App oder das Telefon hat sie übernommen.</string>
+    <string name="share_preview_small">Vorschau verkleinern</string>
+    <string name="share_lens_switch">Objektiv %1$s: tippen für das nächste Objektiv</string>
     <string name="debug_log_title">Debug-Protokoll</string>
     <string name="debug_log">Debug-Protokoll führen</string>
     <string name="debug_log_desc">Für Fehlerberichte: was die App tut, Abstürze eingeschlossen, nur auf diesem Telefon gespeichert. Serveradressen, Namen und Nachrichten werden entfernt. Die App sendet es nie: Teile es selbst, zum Beispiel in einem Fehlerbericht auf GitHub. Ausschalten löscht es.</string>
@@ -585,4 +619,22 @@
     <string name="debug_log_delete">Protokoll löschen</string>
     <string name="debug_log_empty">Das Debug-Protokoll ist noch leer.</string>
     <string name="debug_log_deleted">Debug-Protokoll gelöscht.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">Ein</string>
+    <string name="a11y_off">Aus</string>
+    <string name="a11y_about">Info zu %1$s</string>
+    <string name="a11y_talk_start">Sprechen starten</string>
+    <string name="a11y_talk_stop">Sprechen beenden</string>
+    <string name="a11y_whisper_start">Flüstern starten</string>
+    <string name="a11y_whisper_stop">Flüstern beenden</string>
+    <string name="a11y_talking">Spricht</string>
+    <string name="a11y_whispering">Flüstert</string>
+    <string name="a11y_unread">Ungelesene Nachrichten</string>
+    <string name="a11y_move_up">Nach oben</string>
+    <string name="a11y_move_down">Nach unten</string>
+    <string name="a11y_show_controls">Schaltflächen zeigen</string>
+    <string name="a11y_hide_controls">Schaltflächen ausblenden</string>
+    <string name="a11y_preview_bigger">Vorschau vergrößern</string>
+    <string name="a11y_preview_smaller">Vorschau verkleinern</string>
 </resources>

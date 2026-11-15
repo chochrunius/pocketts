@@ -32,7 +32,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">Избранное</string>
-    <string name="connect_title">Подключение к серверу</string>
     <string name="favourites_in">В избранном</string>
     <string name="favourites_save">Сохранить в избранное</string>
     <string name="favourite_edit">Изменить избранное</string>
@@ -43,6 +42,27 @@
     <string name="favourite_file_port">Порт передачи файлов</string>
     <string name="favourite_file_port_hint">Порт сервера (обычно 30033)</string>
     <string name="favourite_file_port_desc">Только если картинки и аватары сервера не загружаются: его передача файлов работает на другом порту.</string>
+    <string name="favourite_folder">Папка</string>
+    <string name="favourite_folder_new">Новая папка…</string>
+    <string name="folder_name">Название папки</string>
+    <string name="folder_edit">Изменить папку</string>
+    <string name="folder_fold">свернуть папку</string>
+    <string name="folder_unfold">развернуть папку</string>
+    <string name="connect_show">Развернуть панель подключения</string>
+    <string name="connect_hide">Свернуть панель подключения</string>
+    <string name="community_tab">Сообщество</string>
+    <string name="community_desc">Публичные серверы под управлением TeamSpeak. Нажмите на сервер, чтобы войти.</string>
+    <string name="community_desc_no_nick">Публичные серверы под управлением TeamSpeak. Введите никнейм выше, чтобы войти.</string>
+    <string name="community_worldwide">Весь мир</string>
+    <string name="community_eu_east">Восточная Европа</string>
+    <string name="community_emea">Европа, Ближний Восток и Африка</string>
+    <string name="community_apac">Азиатско-Тихоокеанский регион</string>
+    <string name="community_latam">Латинская Америка</string>
+    <string name="community_na">Северная Америка</string>
+    <string name="favourite_channel">Канал для входа</string>
+    <string name="favourite_channel_hint">Канал сервера по умолчанию</string>
+    <string name="favourite_channel_desc">Название канала так, как его показывает сервер. Для вложенного канала укажите путь: Игры/Лобби.</string>
+    <string name="channel_not_joined">Не удалось войти в %1$s: такого канала нет или его пароль неверен. Вы в канале сервера по умолчанию.</string>
     <string name="update_title">Вышел AlfredTS %1$s</string>
     <string name="update_text">На GitHub есть версия новее этой (%1$s).</string>
     <string name="not_now">Не сейчас</string>
@@ -232,6 +252,13 @@
     <string name="playback_play_sound">Воспроизвести звук</string>
     <string name="playback_call_volume">С подавлением эха голоса следуют громкости звонка: нажмите кнопку громкости во время подключения.</string>
     <string name="playback_media_volume">Голоса следуют громкости медиа.</string>
+    <string name="playback_output">Голоса звучат через</string>
+    <string name="playback_output_speaker">Динамик</string>
+    <string name="playback_output_earpiece">Разговорный динамик</string>
+    <string name="playback_output_speaker_desc">Голоса звучат из динамика телефона, держать его у уха не нужно.</string>
+    <string name="playback_output_earpiece_desc">Как при звонке: держите телефон у уха. Экран при этом гаснет.</string>
+    <string name="playback_headset">Использовать подключённые наушники</string>
+    <string name="playback_headset_desc">Подключённые наушники, гарнитура или Bluetooth-колонка воспроизводят голоса. Выключено: голоса всегда звучат из самого телефона.</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">Громкость микрофона</string>
@@ -247,9 +274,11 @@
     <string name="capture_vad_delay">Задержка перед отключением</string>
     <string name="capture_processing">Обработка сигнала</string>
     <string name="capture_noise">Убирать фоновый шум</string>
-    <string name="capture_echo">Подавление эха</string>
+    <string name="capture_echo">Подавление эха (режим звонка)</string>
     <string name="capture_agc">Автоматическая регулировка усиления</string>
-    <string name="capture_echo_desc">С подавлением эха голоса звучат как в телефонном звонке (динамик или гарнитура). Выключите его для лучшего звука в наушниках.</string>
+    <string name="capture_echo_desc">Голоса звучат как в телефонном звонке: через гарнитуру, а без неё — через динамик телефона. Bluetooth-колонка без микрофона не используется, а Bluetooth-наушники переходят на звук звонка, в том числе для других приложений. Выключите его для лучшего звука и для Bluetooth-колонок, и используйте наушники или «Нажми и говори», чтобы микрофон не улавливал колонку.</string>
+    <string name="capture_echo_earpiece">Включено, пока голоса звучат через разговорный динамик (Воспроизведение): он работает только в режиме звонка, а в нём есть подавление эха.</string>
+    <string name="echo_refused">Этот телефон не может воспроизводить голоса с подавлением эха через динамик, поэтому подавление эха выключено. «Нажми и говори» или наушники помогут избежать эха.</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">Показывать функции администратора</string>
@@ -606,6 +635,11 @@
     <string name="capture_ai_noise">ИИ-шумоподавление (RNNoise)</string>
     <string name="capture_ai_noise_desc">Убирает также щелчки клавиатуры, вентилятор, телевизор и другой шум, который пропускает шумоподавление телефона, с помощью небольшой нейросети на телефоне. Расходует немного больше заряда.</string>
     <string name="capture_ai_noise_license">Лицензия RNNoise</string>
+    <string name="share_torch_on">Фонарик включён (нажмите, чтобы выключить)</string>
+    <string name="share_torch_off">Фонарик: освещает то, что снимает задняя камера</string>
+    <string name="share_camera_lost">Камера остановилась: её занял звонок, другое приложение или телефон.</string>
+    <string name="share_preview_small">Уменьшить превью</string>
+    <string name="share_lens_switch">Объектив %1$s: нажмите, чтобы переключить</string>
     <string name="debug_log_title">Журнал отладки</string>
     <string name="debug_log">Вести журнал отладки</string>
     <string name="debug_log_desc">Для сообщений об ошибках: что делает приложение, включая сбои, хранится только на этом телефоне. Адреса серверов, имена и сообщения из него удаляются. Приложение никогда не отправляет его: поделитесь им сами, например в сообщении об ошибке на GitHub. Выключение удаляет журнал.</string>
@@ -613,4 +647,22 @@
     <string name="debug_log_delete">Удалить журнал</string>
     <string name="debug_log_empty">Журнал отладки пока пуст.</string>
     <string name="debug_log_deleted">Журнал отладки удалён.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">Вкл.</string>
+    <string name="a11y_off">Выкл.</string>
+    <string name="a11y_about">О настройке «%1$s»</string>
+    <string name="a11y_talk_start">начать говорить</string>
+    <string name="a11y_talk_stop">перестать говорить</string>
+    <string name="a11y_whisper_start">начать шептать</string>
+    <string name="a11y_whisper_stop">перестать шептать</string>
+    <string name="a11y_talking">Говорит</string>
+    <string name="a11y_whispering">Шепчет</string>
+    <string name="a11y_unread">Непрочитанные сообщения</string>
+    <string name="a11y_move_up">Переместить вверх</string>
+    <string name="a11y_move_down">Переместить вниз</string>
+    <string name="a11y_show_controls">показать кнопки</string>
+    <string name="a11y_hide_controls">скрыть кнопки</string>
+    <string name="a11y_preview_bigger">увеличить превью</string>
+    <string name="a11y_preview_smaller">уменьшить превью</string>
 </resources>

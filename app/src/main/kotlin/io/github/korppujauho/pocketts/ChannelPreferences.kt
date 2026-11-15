@@ -12,6 +12,24 @@ data class ChannelPreference(val remember: Boolean = false, val defaultChannel: 
     }
 }
 
+internal data class ConnectionChannel(
+    val path: String, val password: String, val id: Int = 0, val explicit: Boolean = false,
+)
+
+/** A requested link or favourite wins on first join. A remembered channel wins on reconnect. */
+internal fun connectionChannel(
+    prefs: ChannelPreference, requested: String, password: String, id: Int, reconnecting: Boolean,
+    savedPassword: (Int) -> String,
+): ConnectionChannel {
+    val path = prefs.channel(requested, reconnecting)
+    val explicit = requested.isNotBlank() && !(reconnecting && prefs.remember)
+    if (explicit) return ConnectionChannel(path, password, id, explicit = true)
+    val channelId = path.takeIf { it.startsWith("/") }?.drop(1)?.toIntOrNull() ?: 0
+    val rememberedPassword = if (channelId > 0) savedPassword(channelId) else ""
+    val sameChannel = (id > 0 && id == channelId) || (path.isNotEmpty() && path == requested)
+    return ConnectionChannel(path, rememberedPassword.ifEmpty { password.takeIf { sameChannel }.orEmpty() }, channelId)
+}
+
 /** Independent of credentials; older installations simply have no channel preference. */
 class ChannelPreferences(context: Context) {
     private val prefs = context.getSharedPreferences("channelPreferences", Context.MODE_PRIVATE)

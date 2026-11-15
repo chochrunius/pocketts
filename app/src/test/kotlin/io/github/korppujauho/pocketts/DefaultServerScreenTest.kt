@@ -1,9 +1,12 @@
 package io.github.korppujauho.pocketts
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.*
 import io.github.korppujauho.pocketts.ui.ConnectScreen
 import io.github.korppujauho.pocketts.ui.PocketTsTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,8 +31,12 @@ class DefaultServerScreenTest {
                     Favorites.load(context), null, Example.noConnect)
             }
         }
-        compose.onNodeWithText("AlfredTS_VaseJmeno").assertExists()
-        compose.onNodeWithText("chochrun.eu").assertExists()
+        val connect = compose.onNode(hasText(context.getString(R.string.connect)) and
+            SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+        val bottom = connect.assertIsDisplayed().assertIsEnabled().getUnclippedBoundsInRoot().bottom
+        val nickname = compose.onNodeWithText("AlfredTS_VaseJmeno").getUnclippedBoundsInRoot()
+        val address = compose.onNodeWithText("chochrun.eu").getUnclippedBoundsInRoot()
+        assertTrue("Connect button must be above both fields", bottom <= nickname.top && bottom <= address.top)
         compose.onNodeWithText("Ludmila Chochrun.eu").assertExists()
         compose.onNodeWithText(context.getString(R.string.favourites_in)).assertExists()
         compose.onNode(hasText(context.getString(R.string.favourites_in))).onChildren()

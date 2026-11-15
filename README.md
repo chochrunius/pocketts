@@ -14,17 +14,23 @@ to join.
 ## What it does
 
 - **Voice:** voice activation, push-to-talk (also a floating button over other apps), whispering to chosen people or
-  channels, echo and noise removal. Keeps working with the screen off, and goes quiet during phone calls.
+  channels, echo and noise removal, and AI noise removal (RNNoise) for keyboard clicks, fans and the like. Voices
+  play through the loudspeaker or the earpiece, as you choose, or connected headphones. Keeps working with the
+  screen off, and goes quiet during phone calls.
 - **Channels:** who is where, with avatars, icons, badges and banners. Password-protected channels ask for the
   password. Hold a channel for its info.
 - **Chat:** channel and private chats, pictures, pokes, and a history kept on the phone for 90 days.
 - **Files:** a channel's files: download, upload, rename and delete them, and make folders (as the server allows).
-- **Streams:** watch others' screen and camera streams (at the size you choose, small over the app, or in a small
-  window over other apps), and share your own camera (with your microphone) or screen (with what the phone plays).
+- **Streams:** watch others' screen and camera streams (at the size you choose, small over the app, in a small window
+  over other apps, or on the full screen with push-to-talk and the stream's volume), and share your own camera (with
+  your microphone) or screen (with what the phone plays). The camera has a flashlight, zoom, tap to focus and a
+  button for the phone's other back lenses.
 - **Admin tools** (optional): move, kick and ban people, and add, edit, move and delete channels. The server decides
   who may.
-- **Connecting** by address, server nickname, TeamSpeak link or invite; favourites; privilege keys from a server's
-  admin; reconnecting by itself when the network changes; and mute, sound and disconnect buttons in the notification.
+- **Connecting** by address, server nickname, TeamSpeak link or invite; favourites, in folders you name and arrange
+  by dragging, each with a channel to join if you like; TeamSpeak's own public community servers, one tap away;
+  privilege keys from a server's admin; reconnecting by itself when the network changes; and mute, sound and
+  disconnect buttons in the notification.
 - **Settings** and sounds for events.
 - **Languages:** Czech, English, Finnish, German, Spanish, French, Simplified Chinese and Russian (see
   [TRANSLATIONS.md](TRANSLATIONS.md); corrections welcome).
@@ -49,7 +55,8 @@ data; see [the 1.6.0 release notes](docs/releases/1.6.0.md) before switching.
 
 ## Known limitations
 
-- **No myTeamSpeak features.** Pictures shared through myTeamSpeak by the TeamSpeak app can't be shown in PocketTS.
+- **No myTeamSpeak features.** PocketTS doesn't use myTeamSpeak, TeamSpeak's account service, so what goes through
+  it isn't available: 1:1 voice calls, group chats, and pictures shared through myTeamSpeak by the TeamSpeak app.
 - **Pictures go to the server's own files.** PocketTS can't upload pictures to TeamSpeak's picture service. The
   pictures you send are saved in the channel's files on the server (file transfer), so you need permission to upload
   files in that channel. TeamSpeak app users see them as usual.

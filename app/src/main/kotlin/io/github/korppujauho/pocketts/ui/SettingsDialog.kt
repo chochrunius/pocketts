@@ -7,6 +7,15 @@ import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +58,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -156,9 +166,9 @@ fun SettingsContent(
                     Text(
                         name, color = if (active) Ts.bright else Color(0xFF94A3B8), fontWeight = FontWeight.SemiBold, fontSize = 14.sp,
                         maxLines = 1, softWrap = false,
-                        modifier = Modifier.clickable { tab = i }
+                        modifier = Modifier.selectable(selected = active, role = androidx.compose.ui.semantics.Role.Tab) { tab = i }
                             .drawBehind { if (active) drawLine(Ts.accent, Offset(0f, size.height), Offset(size.width, size.height), 2.dp.toPx()) }
-                            .padding(horizontal = 8.dp, vertical = 8.dp),
+                            .padding(horizontal = 8.dp, vertical = 12.dp),
                     )
                 }
             }
@@ -198,14 +208,46 @@ fun SettingsContent(
     }
 }
 
+/**
+ * A group of settings under its [label]. What it's about is behind an ⓘ at the label's end ([info]), or always in view
+ * under the label ([note]) where a tab has room for it.
+ */
 @Composable
-private fun Group(label: String? = null, badge: String? = null, content: @Composable ColumnScope.() -> Unit) {
+private fun Group(
+    label: String? = null, badge: String? = null, info: String? = null, note: String? = null, content: @Composable ColumnScope.() -> Unit,
+) {
+    var about by rememberSaveable(label) { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (label != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(label, color = Ts.text, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
             if (badge != null) ValueBadge(badge)
+            if (info != null) {
+                Spacer(Modifier.weight(1f))
+                InfoButton(label, about) { about = !about }
+            }
         }
+        if (info != null && about) Desc(info)
+        if (note != null) Desc(note)
         content()
+    }
+}
+
+/**
+ * A setting's ⓘ: its explanation is put away until this is tapped, so a tab reads as a list of settings. Tapped again,
+ * it's put away again.
+ */
+@Composable
+private fun InfoButton(setting: String, open: Boolean, onToggle: () -> Unit) {
+    val state = stringResource(if (open) R.string.a11y_on else R.string.a11y_off)
+    Box(
+        Modifier.size(32.dp).clip(CircleShape).clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onToggle)
+            .semantics { stateDescription = state },
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.material3.Icon(
+            androidx.compose.material.icons.Icons.Outlined.Info, contentDescription = stringResource(R.string.a11y_about, setting),
+            tint = if (open) Ts.accent else Ts.muted, modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -213,13 +255,28 @@ private fun Group(label: String? = null, badge: String? = null, content: @Compos
 fun Desc(text: String) = Text(text, color = Ts.muted, fontSize = 12.5.sp, lineHeight = 16.sp)
 
 @Composable
-internal fun Check(text: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { onChange(!checked) }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides 0.dp) {
-            Checkbox(checked, onChange, colors = CheckboxDefaults.colors(checkedColor = Ts.accent, uncheckedColor = Ts.muted))
+internal fun Check(
+    text: String, checked: Boolean, enabled: Boolean = true, info: String? = null, note: String? = null, onChange: (Boolean) -> Unit,
+) {
+    var about by rememberSaveable(text) { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.weight(1f).clickable(enabled = enabled) { onChange(!checked) }.padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalMinimumInteractiveComponentSize provides 0.dp) {
+                Checkbox(
+                    checked, onChange, enabled = enabled,
+                    colors = CheckboxDefaults.colors(checkedColor = Ts.accent, uncheckedColor = Ts.muted, disabledCheckedColor = Ts.accent.copy(alpha = 0.5f)),
+                )
+            }
+            Text(text, color = if (enabled) Ts.text else Ts.muted, fontSize = 14.sp, modifier = Modifier.padding(start = 10.dp))
         }
-        Text(text, color = Ts.text, fontSize = 14.sp, modifier = Modifier.padding(start = 10.dp))
+        // What the setting is about, behind its ⓘ
+        if (info != null) InfoButton(text, about) { about = !about }
     }
+    if (info != null && about) Desc(info)
+    if (note != null) Desc(note) // always in view
 }
 
 @Composable
@@ -255,7 +312,7 @@ private fun ProfilePicture(self: SelfInfo, actions: SettingsActions) {
     val pick = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
     ) { uri -> if (uri != null) actions.setAvatar(uri) }
-    Group(stringResource(R.string.avatar_title)) {
+    Group(stringResource(R.string.avatar_title), info = stringResource(R.string.avatar_desc)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             PersonAvatar(self.person, self.server, 88)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -266,7 +323,6 @@ private fun ProfilePicture(self: SelfInfo, actions: SettingsActions) {
             }
         }
         self.avatarStatus?.let { Desc(it) }
-        Desc(stringResource(R.string.avatar_desc))
     }
 }
 
@@ -291,8 +347,7 @@ private fun Identity(actions: SettingsActions) {
     val saveFile = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/octet-stream")
     ) { uri -> if (uri != null) status = actions.exportIdentity(uri) ?: saved }
-    Group(stringResource(R.string.identity_title)) {
-        Desc(stringResource(R.string.identity_desc))
+    Group(stringResource(R.string.identity_title), note = stringResource(R.string.identity_desc)) {
         problem?.let { Desc(it) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             SecondaryButton(stringResource(R.string.identity_wipe)) { wiping = true }
@@ -305,8 +360,7 @@ private fun Identity(actions: SettingsActions) {
     var level by remember { mutableStateOf(actions.securityLevel()) }
     var raising by remember { mutableStateOf(false) }
     level?.let { current ->
-        Group(stringResource(R.string.level_title), badge = "$current") {
-            Desc(stringResource(R.string.level_desc))
+        Group(stringResource(R.string.level_title), badge = "$current", info = stringResource(R.string.level_desc)) {
             SecondaryButton(stringResource(R.string.level_raise_button)) { raising = true }
         }
         if (raising) RaiseLevelDialog(current, onClose = { raising = false; level = actions.securityLevel() })
@@ -368,8 +422,7 @@ private fun Identity(actions: SettingsActions) {
 @Composable
 private fun ChannelPasswordsGroup(actions: SettingsActions) {
     var forgotten by remember { mutableStateOf(false) }
-    Group(stringResource(R.string.passwords_title)) {
-        Desc(stringResource(R.string.passwords_desc))
+    Group(stringResource(R.string.passwords_title), note = stringResource(R.string.passwords_desc)) {
         SecondaryButton(stringResource(R.string.passwords_forget)) {
             actions.forgetChannelPasswords()
             forgotten = true
@@ -383,14 +436,14 @@ private fun ChatHistory(actions: SettingsActions) {
     var asking by remember { mutableStateOf(false) }
     var cleared by remember { mutableStateOf(false) }
     val rules = io.github.korppujauho.pocketts.proto.ChatHistory
-    Group(stringResource(R.string.history_title)) {
-        Desc(
-            stringResource(
-                R.string.history_desc,
-                androidx.compose.ui.res.pluralStringResource(R.plurals.history_days, rules.DAYS, rules.DAYS),
-                androidx.compose.ui.res.pluralStringResource(R.plurals.history_lines, rules.LINES, rules.LINES),
-            )
-        )
+    Group(
+        stringResource(R.string.history_title),
+        note = stringResource(
+            R.string.history_desc,
+            androidx.compose.ui.res.pluralStringResource(R.plurals.history_days, rules.DAYS, rules.DAYS),
+            androidx.compose.ui.res.pluralStringResource(R.plurals.history_lines, rules.LINES, rules.LINES),
+        ),
+    ) {
         SecondaryButton(stringResource(R.string.history_clear)) { asking = true }
         if (cleared) Desc(stringResource(R.string.history_cleared))
     }
@@ -417,36 +470,28 @@ private fun General(v: VoiceSettings, nick: String, onNick: (String) -> Unit, on
         TsField(nick, onNick, stringResource(R.string.nickname))
     }
     Group {
-        Check(stringResource(R.string.general_floating_ptt), v.floatingPtt) { onChange(v.copy(floatingPtt = it)) }
-        Desc(stringResource(R.string.general_floating_ptt_desc))
+        Check(stringResource(R.string.general_floating_ptt), v.floatingPtt, info = stringResource(R.string.general_floating_ptt_desc)) { onChange(v.copy(floatingPtt = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_overlay_ptt), v.overlayPtt) { onChange(v.copy(overlayPtt = it)) }
-        Desc(stringResource(R.string.general_overlay_ptt_desc))
+        Check(stringResource(R.string.general_overlay_ptt), v.overlayPtt, info = stringResource(R.string.general_overlay_ptt_desc)) { onChange(v.copy(overlayPtt = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_volume_ptt), v.volumeKeysPtt) { onChange(v.copy(volumeKeysPtt = it)) }
-        Desc(stringResource(R.string.general_volume_ptt_desc))
+        Check(stringResource(R.string.general_volume_ptt), v.volumeKeysPtt, info = stringResource(R.string.general_volume_ptt_desc)) { onChange(v.copy(volumeKeysPtt = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_headset_ptt), v.headsetPtt) { onChange(v.copy(headsetPtt = it)) }
-        Desc(stringResource(R.string.general_headset_ptt_desc))
+        Check(stringResource(R.string.general_headset_ptt), v.headsetPtt, info = stringResource(R.string.general_headset_ptt_desc)) { onChange(v.copy(headsetPtt = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_call_mute), v.muteOnCalls) { onChange(v.copy(muteOnCalls = it)) }
-        Desc(stringResource(R.string.general_call_mute_desc))
+        Check(stringResource(R.string.general_call_mute), v.muteOnCalls, info = stringResource(R.string.general_call_mute_desc)) { onChange(v.copy(muteOnCalls = it)) }
     }
     if (io.github.korppujauho.pocketts.UpdateCheck.enabled) Group {
-        Check(stringResource(R.string.general_updates), v.checkUpdates) { onChange(v.copy(checkUpdates = it)) }
-        Desc(stringResource(R.string.general_updates_desc))
+        Check(stringResource(R.string.general_updates), v.checkUpdates, info = stringResource(R.string.general_updates_desc)) { onChange(v.copy(checkUpdates = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_screen_on), v.keepScreenOn) { onChange(v.copy(keepScreenOn = it)) }
-        Desc(stringResource(R.string.general_screen_on_desc))
+        Check(stringResource(R.string.general_screen_on), v.keepScreenOn, info = stringResource(R.string.general_screen_on_desc)) { onChange(v.copy(keepScreenOn = it)) }
     }
     Group {
-        Check(stringResource(R.string.general_spacers), v.joinSpacers) { onChange(v.copy(joinSpacers = it)) }
-        Desc(stringResource(R.string.general_spacers_desc))
+        Check(stringResource(R.string.general_spacers), v.joinSpacers, info = stringResource(R.string.general_spacers_desc)) { onChange(v.copy(joinSpacers = it)) }
     }
 }
 
@@ -454,28 +499,57 @@ private fun General(v: VoiceSettings, nick: String, onNick: (String) -> Unit, on
 @Composable
 private fun Ui(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
     Group {
-        Check(stringResource(R.string.ui_admin), v.adminTools) { onChange(v.copy(adminTools = it)) }
-        Desc(stringResource(R.string.ui_admin_desc))
+        Check(stringResource(R.string.ui_admin), v.adminTools, note = stringResource(R.string.ui_admin_desc)) { onChange(v.copy(adminTools = it)) }
     }
     Group {
-        Check(stringResource(R.string.ui_controls_bottom), v.controlsAtBottom) { onChange(v.copy(controlsAtBottom = it)) }
-        Desc(stringResource(R.string.ui_controls_bottom_desc))
+        Check(stringResource(R.string.ui_controls_bottom), v.controlsAtBottom, note = stringResource(R.string.ui_controls_bottom_desc)) { onChange(v.copy(controlsAtBottom = it)) }
     }
 }
 
-/** The app's language: the phone's, or one of the translations by its own name. */
+/**
+ * The app's language: the phone's, or one of the translations by its own name. One row showing the chosen one; a tap
+ * opens the list (it scrolls when there are many).
+ */
 @Composable
 private fun Language(tag: String, onChange: (String) -> Unit) {
+    val choices = listOf("" to stringResource(R.string.ui_language_phone)) + io.github.korppujauho.pocketts.AppLanguage.choices
+    val chosen = choices.firstOrNull { it.first == tag }?.second ?: choices.first().second
+    var open by remember { mutableStateOf(false) }
     Group(stringResource(R.string.ui_language)) {
-        Radio(stringResource(R.string.ui_language_phone), tag.isEmpty()) { onChange("") }
-        for ((t, name) in io.github.korppujauho.pocketts.AppLanguage.choices) Radio(name, tag == t) { onChange(t) }
+        Box {
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ts.card)
+                    .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(12.dp))
+                    .clickable(role = androidx.compose.ui.semantics.Role.DropdownList) { open = true }
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(chosen, color = Ts.bright, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Rounded.ExpandMore, contentDescription = null, tint = Ts.muted,
+                )
+            }
+            androidx.compose.material3.DropdownMenu(open, onDismissRequest = { open = false }, containerColor = Ts.card) {
+                for ((t, name) in choices) {
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(name, color = if (t == tag) Ts.bright else Ts.text, fontWeight = if (t == tag) FontWeight.SemiBold else null) },
+                        trailingIcon = if (t == tag) {
+                            { androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.Check, contentDescription = null, tint = Ts.accent) }
+                        } else null,
+                        onClick = {
+                            open = false
+                            onChange(t)
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
 private fun Advanced(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
-    Group(stringResource(R.string.relay_title)) {
-        Desc(stringResource(R.string.relay_desc))
+    Group(stringResource(R.string.relay_title), info = stringResource(R.string.relay_desc)) {
         TsField(v.turnUrl, { onChange(v.copy(turnUrl = it)) }, stringResource(R.string.relay_address), placeholder = "turn:relay.example.com:3478")
         TsField(v.turnUser, { onChange(v.copy(turnUser = it)) }, stringResource(R.string.relay_user))
         TsField(v.turnPassword, { onChange(v.copy(turnPassword = it)) }, stringResource(R.string.relay_password), password = true)
@@ -490,8 +564,7 @@ private fun Advanced(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
         Radio(stringResource(R.string.initial_channel_instant), !v.animateInitialChannel) { onChange(v.copy(animateInitialChannel = false)) }
     }
     Group(stringResource(R.string.debug_log_title)) {
-        Check(stringResource(R.string.debug_log), v.debugLog) { onChange(v.copy(debugLog = it)) }
-        Desc(stringResource(R.string.debug_log_desc))
+        Check(stringResource(R.string.debug_log), v.debugLog, info = stringResource(R.string.debug_log_desc)) { onChange(v.copy(debugLog = it)) }
         if (v.debugLog) {
             val context = androidx.compose.ui.platform.LocalContext.current
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -521,9 +594,45 @@ private fun Advanced(v: VoiceSettings, onChange: (VoiceSettings) -> Unit) {
     }
 }
 
+/** A two-way choice in one row, as the server screen's Channels/Chat switch. */
+@Composable
+internal fun Segmented(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Ts.card)
+            .border(1.dp, Ts.hairline, RoundedCornerShape(10.dp)).padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEachIndexed { i, label ->
+            val active = i == selected
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(7.dp)).background(if (active) Color(0x12FFFFFF) else Color.Transparent)
+                    .selectable(selected = active, role = androidx.compose.ui.semantics.Role.RadioButton) { onSelect(i) }
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(label, color = if (active) Ts.bright else Color(0xFF94A3B8), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            }
+        }
+    }
+}
+
 @Composable
 private fun Playback(v: VoiceSettings, actions: SettingsActions, onChange: (VoiceSettings) -> Unit) {
-    Group(stringResource(R.string.playback_voice_volume), "${if (v.voiceVolumeDb > 0) "+" else ""}${v.voiceVolumeDb} dB") {
+    // Where voices come out: the choice the rest follows (the earpiece brings call audio, and echo cancellation, along)
+    Group(
+        stringResource(R.string.playback_output),
+        info = stringResource(if (v.earpiece) R.string.playback_output_earpiece_desc else R.string.playback_output_speaker_desc),
+    ) {
+        Segmented(
+            listOf(stringResource(R.string.playback_output_speaker), stringResource(R.string.playback_output_earpiece)),
+            if (v.earpiece) 1 else 0,
+        ) { onChange(v.copy(earpiece = it == 1)) }
+        Check(stringResource(R.string.playback_headset), v.useHeadset, info = stringResource(R.string.playback_headset_desc)) { onChange(v.copy(useHeadset = it)) }
+    }
+    Group(
+        stringResource(R.string.playback_voice_volume), "${if (v.voiceVolumeDb > 0) "+" else ""}${v.voiceVolumeDb} dB",
+        info = stringResource(if (v.callAudio) R.string.playback_call_volume else R.string.playback_media_volume),
+    ) {
         TsSlider(v.voiceVolumeDb.toFloat(), -20f..12f, 31) { onChange(v.copy(voiceVolumeDb = it.roundToInt())) }
         RangeEnds(stringResource(R.string.quiet), stringResource(R.string.loud))
     }
@@ -531,8 +640,7 @@ private fun Playback(v: VoiceSettings, actions: SettingsActions, onChange: (Voic
         SecondaryButton(stringResource(R.string.playback_test_sound)) { actions.playTestSound() }
     }
     Group {
-        Check(stringResource(R.string.playback_event_sounds), v.uiSounds) { onChange(v.copy(uiSounds = it)) }
-        Desc(stringResource(R.string.playback_event_sounds_desc))
+        Check(stringResource(R.string.playback_event_sounds), v.uiSounds, info = stringResource(R.string.playback_event_sounds_desc)) { onChange(v.copy(uiSounds = it)) }
     }
     if (v.uiSounds) {
         Group(stringResource(R.string.playback_sound_volume), "${(v.uiSoundVolume * 100).roundToInt()}%") {
@@ -540,7 +648,6 @@ private fun Playback(v: VoiceSettings, actions: SettingsActions, onChange: (Voic
             SecondaryButton(stringResource(R.string.playback_play_sound)) { io.github.korppujauho.pocketts.UiSounds.play(io.github.korppujauho.pocketts.UiSounds.Cue.MESSAGE_IN, v) }
         }
     }
-    Desc(stringResource(if (v.echoCancellation) R.string.playback_call_volume else R.string.playback_media_volume))
 }
 
 @Composable
@@ -559,9 +666,8 @@ private fun Capture(v: VoiceSettings, actions: SettingsActions, onChange: (Voice
         Desc(stringResource(R.string.capture_level_desc))
     }
     if (v.activation == Activation.VAD) {
-        Group(stringResource(R.string.capture_vad_level), "%.1f%%".format(v.vadThreshold * 100)) {
+        Group(stringResource(R.string.capture_vad_level), "%.1f%%".format(v.vadThreshold * 100), info = stringResource(R.string.capture_vad_level_desc)) {
             TsSlider(v.vadThreshold, 0f..0.1f, 99) { onChange(v.copy(vadThreshold = (it * 1000).roundToInt() / 1000f)) }
-            Desc(stringResource(R.string.capture_vad_level_desc))
         }
         Group(stringResource(R.string.capture_vad_delay), "%.1f s".format(v.vadTailMs / 1000f)) {
             TsSlider(v.vadTailMs / 1000f, 0.1f..2f, 18) { onChange(v.copy(vadTailMs = (it * 10).roundToInt() * 100)) }
@@ -569,8 +675,7 @@ private fun Capture(v: VoiceSettings, actions: SettingsActions, onChange: (Voice
     }
     Group(stringResource(R.string.capture_processing)) {
         Check(stringResource(R.string.capture_noise), v.noiseSuppression) { onChange(v.copy(noiseSuppression = it)) }
-        Check(stringResource(R.string.capture_ai_noise), v.aiNoiseRemoval) { onChange(v.copy(aiNoiseRemoval = it)) }
-        Desc(stringResource(R.string.capture_ai_noise_desc))
+        Check(stringResource(R.string.capture_ai_noise), v.aiNoiseRemoval, info = stringResource(R.string.capture_ai_noise_desc)) { onChange(v.copy(aiNoiseRemoval = it)) }
         // RNNoise's license (BSD: its notice goes with the app)
         var license by remember { mutableStateOf(false) }
         Text(
@@ -578,9 +683,16 @@ private fun Capture(v: VoiceSettings, actions: SettingsActions, onChange: (Voice
             modifier = Modifier.clickable { license = true }.padding(vertical = 2.dp),
         )
         if (license) LicenseDialog("licenses/rnnoise.txt", "RNNoise") { license = false }
-        Check(stringResource(R.string.capture_echo), v.echoCancellation) { onChange(v.copy(echoCancellation = it)) }
+        // With the earpiece (Playback) it's on and can't be turned off: the earpiece only plays as call audio. On a
+        // phone whose loudspeaker doesn't play call audio it's off with the loudspeaker, and can't be turned on.
+        // Why it's greyed out is said without a tap; what it does is behind its ⓘ
+        val fixed = v.earpiece || v.speakerRefused
+        Check(
+            stringResource(R.string.capture_echo), v.callAudio, enabled = !fixed,
+            info = stringResource(R.string.capture_echo_desc).takeIf { !fixed },
+        ) { onChange(v.copy(echoCancellation = it)) }
+        if (fixed) Desc(stringResource(if (v.earpiece) R.string.capture_echo_earpiece else R.string.echo_refused))
         Check(stringResource(R.string.capture_agc), v.autoGainControl) { onChange(v.copy(autoGainControl = it)) }
-        Desc(stringResource(R.string.capture_echo_desc))
     }
 }
 

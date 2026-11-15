@@ -42,7 +42,6 @@
 
     <!-- Connect screen -->
     <string name="favourites">Favourites</string>
-    <string name="connect_title">Connect to a server</string>
     <string name="favourites_in">In favourites</string>
     <string name="favourites_save">Save to favourites</string>
     <string name="favourite_edit">Edit favourite</string>
@@ -53,6 +52,27 @@
     <string name="favourite_file_port">File transfer port</string>
     <string name="favourite_file_port_hint">The server\'s own (usually 30033)</string>
     <string name="favourite_file_port_desc">Only if the server\'s pictures and avatars don\'t load: its file transfer is on another port.</string>
+    <string name="favourite_folder">Folder</string>
+    <string name="favourite_folder_new">New folder…</string>
+    <string name="folder_name">Folder name</string>
+    <string name="folder_edit">Edit folder</string>
+    <string name="folder_fold">fold the folder</string>
+    <string name="folder_unfold">open the folder</string>
+    <string name="connect_show">Open the connect panel</string>
+    <string name="connect_hide">Fold the connect panel</string>
+    <string name="community_tab">Community</string>
+    <string name="community_desc">Public servers run by TeamSpeak. Tap one to join.</string>
+    <string name="community_desc_no_nick">Public servers run by TeamSpeak. Type a nickname above to join one.</string>
+    <string name="community_worldwide">Worldwide</string>
+    <string name="community_eu_east">Europe East</string>
+    <string name="community_emea">Europe, Middle East and Africa</string>
+    <string name="community_apac">Asia–Pacific</string>
+    <string name="community_latam">Latin America</string>
+    <string name="community_na">North America</string>
+    <string name="favourite_channel">Channel to join</string>
+    <string name="favourite_channel_hint">The server\'s default channel</string>
+    <string name="favourite_channel_desc">The channel\'s name, written as the server shows it. For a channel inside another one, give its path: Games/Lobby.</string>
+    <string name="channel_not_joined">Couldn\'t join %1$s: there\'s no such channel, or its password is wrong. You\'re in the server\'s default channel.</string>
     <string name="update_title">AlfredTS %1$s is out</string>
     <string name="update_text">A newer version than this one (%1$s) is on GitHub.</string>
     <string name="not_now">Not now</string>
@@ -123,7 +143,7 @@
 
     <!-- A picture on the whole screen -->
     <string name="picture_save">Save to the gallery</string>
-    <!-- %1$s is the folder, Pictures/PocketTS -->
+    <!-- %1$s is the folder, Pictures/AlfredTS -->
     <string name="picture_saved">Saved to %1$s</string>
     <!-- %1$s is the reason, as the phone gives it -->
     <string name="picture_failed">That didn\'t work: %1$s</string>
@@ -249,6 +269,13 @@
     <string name="playback_play_sound">Play a sound</string>
     <string name="playback_call_volume">With echo cancellation on, voices follow the call volume: press a volume button while connected.</string>
     <string name="playback_media_volume">Voices follow the media volume.</string>
+    <string name="playback_output">Voices play through</string>
+    <string name="playback_output_speaker">Loudspeaker</string>
+    <string name="playback_output_earpiece">Earpiece</string>
+    <string name="playback_output_speaker_desc">Voices come from the phone\'s loudspeaker, so you don\'t need to hold the phone.</string>
+    <string name="playback_output_earpiece_desc">As in a phone call: hold the phone to your ear. The screen turns off there.</string>
+    <string name="playback_headset">Use connected headphones</string>
+    <string name="playback_headset_desc">Headphones, a headset or a Bluetooth speaker play the voices while connected. Off: the phone itself always plays them.</string>
 
     <!-- Settings › Capture -->
     <string name="capture_mic_volume">Microphone volume</string>
@@ -264,9 +291,11 @@
     <string name="capture_vad_delay">Delay before deactivation</string>
     <string name="capture_processing">Signal processing</string>
     <string name="capture_noise">Remove background noise</string>
-    <string name="capture_echo">Echo cancellation</string>
+    <string name="capture_echo">Echo cancellation (phone call mode)</string>
     <string name="capture_agc">Automatic gain control</string>
-    <string name="capture_echo_desc">Echo cancellation plays voices like a phone call (loudspeaker, or your headset). Turn it off for the best sound with headphones.</string>
+    <string name="capture_echo_desc">Voices play like a phone call: through your headset, or else the phone\'s loudspeaker. A Bluetooth speaker without a microphone isn\'t used, and Bluetooth headphones switch to their call sound, for other apps too. Turn it off for the best sound and for Bluetooth speakers, and use headphones or push-to-talk so the microphone doesn\'t pick up the speaker.</string>
+    <string name="capture_echo_earpiece">On while voices play through the earpiece (Playback): the earpiece only works as a phone call, which has echo cancellation.</string>
+    <string name="echo_refused">This phone can\'t play echo-cancelled voices through its loudspeaker, so echo cancellation is off. Push-to-talk or headphones avoid echo.</string>
 
     <!-- Settings › UI -->
     <string name="ui_admin">Show admin functions</string>
@@ -625,6 +654,11 @@
     <string name="capture_ai_noise">AI noise removal (RNNoise)</string>
     <string name="capture_ai_noise_desc">Also removes keyboard clicks, a fan, a TV and other noise the phone\'s own removal lets through, with a small neural network on the phone. Uses a little more battery.</string>
     <string name="capture_ai_noise_license">RNNoise\'s license</string>
+    <string name="share_torch_on">Flashlight on (tap for off)</string>
+    <string name="share_torch_off">Flashlight: lights what the back camera films</string>
+    <string name="share_camera_lost">The camera stopped: a call, another app or the phone took it.</string>
+    <string name="share_preview_small">Make the preview small</string>
+    <string name="share_lens_switch">Lens %1$s: tap for the next lens</string>
     <string name="debug_log_title">Debug log</string>
     <string name="debug_log">Keep a debug log</string>
     <string name="debug_log_desc">For bug reports: what the app does, crashes included, kept on this phone only. Server addresses, names and messages are taken out. The app never sends it: share it yourself, for example in a bug report on GitHub. Turning this off deletes it.</string>
@@ -632,4 +666,22 @@
     <string name="debug_log_delete">Delete log</string>
     <string name="debug_log_empty">The debug log is empty for now.</string>
     <string name="debug_log_deleted">Debug log deleted.</string>
+
+    <!-- Read out by screen readers (TalkBack) -->
+    <string name="a11y_on">On</string>
+    <string name="a11y_off">Off</string>
+    <string name="a11y_about">About %1$s</string>
+    <string name="a11y_talk_start">start talking</string>
+    <string name="a11y_talk_stop">stop talking</string>
+    <string name="a11y_whisper_start">start whispering</string>
+    <string name="a11y_whisper_stop">stop whispering</string>
+    <string name="a11y_talking">Talking</string>
+    <string name="a11y_whispering">Whispering</string>
+    <string name="a11y_unread">Unread messages</string>
+    <string name="a11y_move_up">Move up</string>
+    <string name="a11y_move_down">Move down</string>
+    <string name="a11y_show_controls">show the buttons</string>
+    <string name="a11y_hide_controls">hide the buttons</string>
+    <string name="a11y_preview_bigger">make the preview bigger</string>
+    <string name="a11y_preview_smaller">make the preview smaller</string>
 </resources>

@@ -1,6 +1,47 @@
 # Changelog
 
-## Unreleased
+## 1.7.0 — AlfredTS
+
+Based on PocketTS 1.7.0 (2026-11-11). Also includes the PocketTS 1.6.0 camera changes that landed after the fork diverged. See [release notes](docs/releases/1.7.0.md).
+
+- **Camera streams:** the camera has the app's own camera code now, which brings:
+  - **Flashlight:** a button in the share bar lights the back camera (also a lens without a flash of its own, such as
+    an ultra-wide, on phones that allow it); a new stream starts with it off, as with the ring light.
+  - **Zoom:** pinch the big preview; the zoom shows for a moment, a double tap returns to 1×, and each camera keeps its
+    own. On phones whose lenses work as one camera, zooming under 1× reaches the ultra-wide.
+  - **Tap to focus:** tap the big preview to focus and set the exposure on that spot, with a ring where it was
+    tapped; after a few seconds the camera follows the scene again. A button makes the big preview small.
+  - **Lenses:** on phones that offer their back lenses apart, a button in the share bar shows the lens as its zoom
+    ("0.6×", "1×") and switches to the next one during the stream.
+  - **Losing the camera** to a call or another app ends the share with a message instead of a frozen picture.
+  - The preview shows the picture as viewers see it, also with the turn locked.
+
+- **Loudspeaker or earpiece:** Settings › Playback has "Voices play through", with Loudspeaker and Earpiece, followed
+  at once while connected, and "Use connected headphones". With the earpiece the screen turns off at the ear, as in a
+  phone call. The earpiece only plays as the phone's call audio, so echo cancellation is on with it.
+- **Voices from the earpiece by mistake:** on some phones voices came from the earpiece with echo cancellation on,
+  though the loudspeaker was meant. The loudspeaker is now asked for again once sound is running. A phone that still
+  plays call audio from its earpiece plays voices as media instead, which is always the loudspeaker, with echo
+  cancellation off and a notice saying so. Found by JohnyCore.
+- **Favourites in folders:** favourites are shown in folders that fold shut. Edit favourite has a Folder choice (with
+  "New folder…"), and a folder's header held opens Edit folder for its name and its place among the folders. A
+  favourite held is dragged to another place, also into another folder. A favourite is removed in its edit window
+  (the cross on its row is gone), and the Connect and Community panel folds shut to its bar. The favourites list on a
+  server shows the folders too. Suggested by imaliaz.
+- **A channel for each favourite:** Edit favourite has "Channel to join" (a name, or a path such as Games/Lobby) and
+  that channel's password, kept encrypted. A channel that's renamed or moved later is found again. When the channel
+  isn't there or its password is wrong, a warning says so: a TeamSpeak 6 server puts you in its default channel
+  without a word. Links with a channel get the same warning. The idea is from chochrunius's fork.
+- **TeamSpeak's community servers:** the connect panel has a Community page (a tap on its name, or a swipe) with
+  TeamSpeak's six public community servers, one tap away.
+- **Czech:** PocketTS in Czech, from chochrunius's translation. Settings › UI › Language is one row that opens the list
+  of languages, instead of a button for each.
+- **Tidier settings:** most explanations are behind an ⓘ next to their setting. Echo cancellation is named "Echo
+  cancellation (phone call mode)", and its text says what that means for Bluetooth speakers and headphones.
+- **Dialogs don't jump:** a dialog no longer moves on every character typed into a field the keyboard covers.
+- **Connect screen:** its error shows under the header, in view also when connecting from a favourite (from
+  chochrunius's fork), and a nickname saved in Settings shows in the form at once.
+  The blue Connect button sits above the nickname and server address.
 
 ## 1.6.1 (2026-11-05)
 
@@ -41,6 +82,26 @@ Included upstream changes since PocketTS 1.5.0:
 - **Talking while watching full screen:** a stream on the full screen covered the push-to-talk button. In push-to-talk
   mode the round talk button is in its bottom corner (and the whisper button above it while there's a whisper list),
   with the stream's own buttons. The full screen also has the stream's volume slider, not only sound on and off.
+- **Debug log:** Settings › Advanced › Debug log keeps a log for bug reports on the phone, crashes included, with
+  server addresses, names, messages and keys taken out (running numbers such as "server 1" tell them apart). Of the
+  chat it notes only that a message was sent or arrived. The app never sends it: Share log hands it to
+  the app you choose, Delete log removes it, and turning it off deletes it. Off by default. The privacy policy says
+  what it holds, and a bug report template asks for it.
+- **Easier to read and tap:** grey text is a little lighter, and the WATCH and main blue buttons a little darker, so
+  their text reads easily; WATCH and the small crosses are bigger to tap. Disconnect is an icon like the star and the
+  gear next to it.
+- **Pasted ts3server:// links:** a `ts3server://` link pasted into the address field now joins its channel, with its
+  channel and server passwords (a privilege key in it is asked about first, as when the link is opened). Only the
+  server is kept as the address, so the link's passwords aren't saved with it. Connecting again after raising the
+  security level keeps a link's channel and privilege key too. Both found by chochrunius.
+- **Screen readers (TalkBack):** the talk and whisper buttons work with a double tap (once to start, again to stop),
+  Microphone, Sound and Share say whether they're on or off, tabs say which is chosen and when there are unread
+  messages, warnings and "is whispering to you" are read out, a person's row says when they're talking, and in the
+  channel editor Move up and Move down change the order without dragging.
+- **Smoother start:** PocketTS's own code is compiled ahead of time when the app is installed (a baseline profile),
+  so starting, opening screens the first time and starting a stream are smoother. The log notes how long a start took.
+- **Smoother in busy channels:** someone starting or stopping talking now redraws only their row in the channel list,
+  not the whole screen (and not the chat at all), so a busy channel uses less of the phone.
 
 ## 1.5.0 (2026-10-28)
 
